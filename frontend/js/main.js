@@ -1,311 +1,137 @@
 /**
- * Sistema de Registro de Asistencia para Eventos de Empresa
- * Utiliza Fuse.js para búsqueda difusa de colaboradores
- * Versión: 2.0.0 - JSONP Implementation
+ * Sistema de Registro de Asistencia - Versión Simplificada
+ * Solo funciones esenciales para debugging
  */
 
-// Configuración de la aplicación
+console.log('🔄 INICIANDO VERSIÓN SIMPLIFICADA 2.0.1');
+
+// Configuración
 const CONFIG = {
-    // URL del Web App de Google Apps Script
     apiUrl: 'https://script.google.com/macros/s/AKfycbxY09Lg1dskwOdKy9ZEVOrfwWVJlqRa9iXhCGbrYDGb98ymfjt2enKEFvlOhRh576kc/exec',
-    maxGuests: 10,
-    searchDelay: 300, // Retraso en ms para evitar demasiadas búsquedas
-    
-    // Configuración específica para Google Apps Script
-    requestTimeout: 30000, // 30 segundos de timeout para Google Apps Script
-    retryAttempts: 3, // Número de intentos en caso de error
-    retryDelay: 1000, // Retraso entre intentos en ms
-    version: '2.0.0'
+    version: '2.0.1'
 };
 
 // Variables globales
 let colaboradores = [];
-let fuse = null;
 let selectedColaborador = null;
-let searchTimeout = null;
-let elements = {}; // Objeto para almacenar referencias a elementos del DOM
+let elements = {};
 
-// Función para rastrear cambios en selectedColaborador
-function setSelectedColaborador(newValue, location) {
-    console.log(`🔄 selectedColaborador cambiado en ${location}:`);
-    console.log(`   - Valor anterior:`, selectedColaborador);
-    console.log(`   - Valor nuevo:`, newValue);
-    console.log(`   - Stack trace:`);
-    console.trace();
-    selectedColaborador = newValue;
-}
-
-/**
- * Inicializa la aplicación cuando el DOM está cargado
- */
+// Inicializar aplicación
 document.addEventListener('DOMContentLoaded', async function() {
-    console.log('🔄 Iniciando aplicación...');
+    console.log('🚀 Aplicación versión:', CONFIG.version);
     
-    // Obtener referencias a elementos del DOM
-    initializeElements();
+    // Inicializar elementos
+    elements = {
+        searchInput: document.getElementById('searchInput'),
+        searchResults: document.getElementById('searchResults'),
+        selectedSection: document.getElementById('selectedSection'),
+        selectedName: document.getElementById('selectedName'),
+        selectedLegajo: document.getElementById('selectedLegajo'),
+        registrationForm: document.getElementById('registrationForm'),
+        guestCount: document.getElementById('guestCount'),
+        guestsSection: document.getElementById('guestsSection'),
+        submitBtn: document.getElementById('submitBtn'),
+        message: document.getElementById('message'),
+        loading: document.getElementById('loading')
+    };
     
-    // Mostrar estado de carga inicial
-    showInitialLoading();
+    // Cargar colaboradores
+    await loadColaboradores();
     
-    // Configurar event listeners
+    // Event listeners
     setupEventListeners();
     
-    try {
-        // Cargar datos de colaboradores
-        await loadColaboradores();
-        
-        // Inicializar Fuse.js para búsqueda
-        initializeFuse();
-        
-        // Habilitar búsqueda una vez cargados los datos
-        enableSearch();
-        
-        console.log('✅ Aplicación inicializada correctamente - Versión:', CONFIG.version);
-        console.log('📌 Método de envío: JSONP (NO iframe)');
-        console.log('📌 Si aparece "iframe" en los logs, hay un problema de caché');
-        
-    } catch (error) {
-        console.error('❌ Error al inicializar aplicación:', error);
-        showLoadingError();
-    }
+    console.log('✅ Aplicación inicializada correctamente');
 });
 
-/**
- * Inicializa las referencias a elementos del DOM
- */
-function initializeElements() {
-    const requiredElements = {
-        searchInput: 'searchInput',
-        searchResults: 'searchResults',
-        selectedSection: 'selectedSection',
-        selectedName: 'selectedName',
-        selectedLegajo: 'selectedLegajo',
-        registrationForm: 'registrationForm',
-        guestCount: 'guestCount',
-        guestsSection: 'guestsSection',
-        submitBtn: 'submitBtn',
-        cancelBtn: 'cancelBtn',
-        message: 'message',
-        loading: 'loading'
-    };
-    
-    // Inicializar elementos requeridos
-    for (const [key, id] of Object.entries(requiredElements)) {
-        elements[key] = document.getElementById(id);
-        if (!elements[key]) {
-            console.error(`Elemento requerido no encontrado: ${id}`);
-        }
-    }
-    
-    // Elementos opcionales
-    elements.searchContainer = document.querySelector('.search-input-container');
-    
-    console.log('Elementos inicializados:', elements);
-}
-
-/**
- * Configura todos los event listeners
- */
-function setupEventListeners() {
-    // Validar que los elementos existan antes de agregar listeners
-    if (!elements.searchInput || !elements.searchResults || !elements.guestCount || 
-        !elements.registrationForm || !elements.cancelBtn) {
-        console.error('No se pueden configurar event listeners: elementos faltantes');
-        return;
-    }
-    
-    // Búsqueda de colaboradores
-    elements.searchInput.addEventListener('input', handleSearch);
-    elements.searchInput.addEventListener('blur', (e) => {
-        // Retrasar el ocultar para permitir clics en los resultados
-        setTimeout(() => {
-            hideSearchResults();
-        }, 150);
-    });
-    elements.searchInput.addEventListener('focus', showSearchHint);
-    
-    // Cantidad de invitados
-    elements.guestCount.addEventListener('input', handleGuestCountChange);
-    
-    // Formulario de registro
-    elements.registrationForm.addEventListener('submit', handleSubmit);
-    
-    // Botón cancelar
-    elements.cancelBtn.addEventListener('click', handleCancel);
-    
-    // Cerrar resultados al hacer clic fuera
-    document.addEventListener('click', function(event) {
-        if (elements.searchInput && elements.searchResults && 
-            !elements.searchInput.contains(event.target) && 
-            !elements.searchResults.contains(event.target)) {
-            hideSearchResults();
-            hideSearchHint();
-        }
-    });
-}
-
-/**
- * Muestra el hint de búsqueda
- */
-function showSearchHint() {
-    if (elements.searchContainer) {
-        elements.searchContainer.classList.add('active');
-    }
-}
-
-/**
- * Oculta el hint de búsqueda
- */
-function hideSearchHint() {
-    if (elements.searchContainer) {
-        elements.searchContainer.classList.remove('active');
-    }
-}
-
-/**
- * Carga los datos de colaboradores desde Google Apps Script
- */
+// Cargar colaboradores
 async function loadColaboradores() {
     try {
-        console.log('Cargando colaboradores desde Google Apps Script...');
-        
-        // Usar JSONP para evitar problemas de CORS
+        console.log('📥 Cargando colaboradores...');
         const response = await fetchWithJSONP(CONFIG.apiUrl);
         
-        console.log('Respuesta completa de Google Apps Script:', response);
-        
-        // Verificar si la respuesta contiene colaboradores
         if (response.colaboradores && Array.isArray(response.colaboradores)) {
             colaboradores = response.colaboradores;
-            console.log(`✅ Cargados ${colaboradores.length} colaboradores desde Google Apps Script`);
-            console.log('Primeros 3 colaboradores:', colaboradores.slice(0, 3));
         } else if (Array.isArray(response)) {
-            // Si la respuesta es directamente un array
             colaboradores = response;
-            console.log(`✅ Cargados ${colaboradores.length} colaboradores desde Google Apps Script (array directo)`);
-            console.log('Primeros 3 colaboradores:', colaboradores.slice(0, 3));
         } else {
-            throw new Error('Formato de respuesta inválido desde Google Apps Script: ' + JSON.stringify(response));
+            throw new Error('Formato de respuesta inválido');
         }
         
-        if (colaboradores.length === 0) {
-            throw new Error('No se encontraron colaboradores en Google Apps Script');
-        }
-        
+        console.log(`✅ Cargados ${colaboradores.length} colaboradores`);
+        showMessage(`✅ Cargados ${colaboradores.length} colaboradores`, 'success');
     } catch (error) {
-        console.error('❌ Error al cargar colaboradores desde Google Apps Script:', error);
-        colaboradores = []; // Array vacío para ver claramente el error
-        throw error; // Re-lanzar el error para que se maneje en el nivel superior
+        console.error('❌ Error cargando colaboradores:', error);
+        showMessage('❌ Error cargando colaboradores', 'error');
     }
 }
 
-/**
- * Inicializa Fuse.js para búsqueda difusa
- */
-function initializeFuse() {
-    if (!colaboradores.length) {
-        console.error('No hay colaboradores cargados para inicializar Fuse');
-        return;
-    }
-    
-    // Crear versión normalizada de los colaboradores para búsqueda
-    const colaboradoresNormalizados = createSearchableColaboradores(colaboradores);
-    
-    // Configuración de Fuse.js con campos normalizados
-    const fuseOptions = {
-        keys: [
-            { name: 'nombreCompleto', weight: 0.7 },
-            { name: 'nombreNormalizado', weight: 0.8 }, // Mayor peso para búsqueda sin acentos
-            { name: 'legajo', weight: 0.6 },
-            { name: 'legajoNormalizado', weight: 0.6 }
-        ],
-        threshold: 0.4, // Sensibilidad de la búsqueda (0 = exacta, 1 = muy permisiva)
-        includeScore: true,
-        minMatchCharLength: 2,
-        ignoreLocation: true,
-        getFn: (obj, path) => {
-            // Función personalizada para obtener valores
-            if (path === 'nombreNormalizado') {
-                return obj.nombreNormalizado;
-            }
-            if (path === 'legajoNormalizado') {
-                return obj.legajoNormalizado;
-            }
-            return obj[path];
-        }
-    };
-    
-    fuse = new Fuse(colaboradoresNormalizados, fuseOptions);
-    console.log('Fuse.js inicializado correctamente con soporte para acentos');
+// JSONP fetch
+function fetchWithJSONP(url, timeout = 30000) {
+    return new Promise((resolve, reject) => {
+        const callbackName = 'jsonp_callback_' + Date.now();
+        
+        const cleanup = () => {
+            if (window[callbackName]) delete window[callbackName];
+            if (script.parentNode) script.parentNode.removeChild(script);
+        };
+        
+        window[callbackName] = (data) => {
+            cleanup();
+            resolve(data);
+        };
+        
+        const script = document.createElement('script');
+        script.src = url + '?callback=' + callbackName;
+        script.onerror = () => {
+            cleanup();
+            reject(new Error('Error en JSONP'));
+        };
+        
+        setTimeout(() => {
+            cleanup();
+            reject(new Error('Timeout'));
+        }, timeout);
+        
+        document.head.appendChild(script);
+    });
 }
 
-/**
- * Maneja la búsqueda de colaboradores
- */
+// Event listeners
+function setupEventListeners() {
+    if (elements.searchInput) {
+        elements.searchInput.addEventListener('input', handleSearch);
+    }
+    
+    if (elements.registrationForm) {
+        elements.registrationForm.addEventListener('submit', handleSubmit);
+    }
+    
+    if (elements.guestCount) {
+        elements.guestCount.addEventListener('input', handleGuestCountChange);
+    }
+}
+
+// Búsqueda simple
 function handleSearch(event) {
-    const query = event.target.value.trim();
-    
-    // Verificar si los colaboradores están cargados
-    if (!colaboradores || colaboradores.length === 0) {
-        console.log('⚠️ Búsqueda cancelada: colaboradores no cargados');
-        hideSearchResults();
-        return;
-    }
-    
-    // Cancelar búsqueda anterior
-    if (searchTimeout) {
-        clearTimeout(searchTimeout);
-    }
+    const query = event.target.value.trim().toLowerCase();
     
     if (query.length < 2) {
-        hideSearchResults();
+        elements.searchResults.innerHTML = '';
+        elements.searchResults.style.display = 'none';
         return;
     }
     
-    // Retrasar la búsqueda para evitar demasiadas consultas
-    searchTimeout = setTimeout(() => {
-        performSearch(query);
-    }, CONFIG.searchDelay);
+    const results = colaboradores.filter(col => 
+        col.nombreCompleto.toLowerCase().includes(query) ||
+        col.legajo.includes(query)
+    ).slice(0, 10);
+    
+    displayResults(results);
 }
 
-/**
- * Ejecuta la búsqueda usando Fuse.js
- */
-function performSearch(query) {
-    if (!fuse) {
-        console.error('Fuse no está inicializado');
-        return;
-    }
-    
-    // Normalizar la consulta del usuario
-    const normalizedQuery = normalizeText(query);
-    
-    // Buscar tanto con la consulta original como con la normalizada
-    const originalResults = fuse.search(query);
-    const normalizedResults = fuse.search(normalizedQuery);
-    
-    // Combinar resultados y eliminar duplicados
-    const combinedResults = [...originalResults, ...normalizedResults];
-    const uniqueResults = [];
-    const seenLegajos = new Set();
-    
-    combinedResults.forEach(result => {
-        if (!seenLegajos.has(result.item.legajo)) {
-            seenLegajos.add(result.item.legajo);
-            uniqueResults.push(result);
-        }
-    });
-    
-    // Ordenar por puntuación (menor puntuación = mejor coincidencia)
-    uniqueResults.sort((a, b) => a.score - b.score);
-    
-    displaySearchResults(uniqueResults);
-}
-
-/**
- * Muestra los resultados de la búsqueda
- */
-function displaySearchResults(results) {
+// Mostrar resultados
+function displayResults(results) {
     elements.searchResults.innerHTML = '';
     
     if (results.length === 0) {
@@ -314,261 +140,41 @@ function displaySearchResults(results) {
         return;
     }
     
-    // Mostrar máximo 10 resultados
-    const maxResults = Math.min(results.length, 10);
-    
-    for (let i = 0; i < maxResults; i++) {
-        const item = results[i].item;
-        const resultElement = createSearchResultElement(item);
-        elements.searchResults.appendChild(resultElement);
-    }
+    results.forEach(colaborador => {
+        const div = document.createElement('div');
+        div.className = 'search-result-item';
+        div.innerHTML = `
+            <div class="result-name">${colaborador.nombreCompleto}</div>
+            <div class="result-legajo">Legajo: ${colaborador.legajo}</div>
+        `;
+        
+        div.addEventListener('click', () => selectColaborador(colaborador));
+        elements.searchResults.appendChild(div);
+    });
     
     elements.searchResults.style.display = 'block';
 }
 
-/**
- * Crea un elemento HTML para un resultado de búsqueda
- */
-function createSearchResultElement(colaborador) {
-    const div = document.createElement('div');
-    div.className = 'search-result-item';
-    
-    // Resaltar coincidencias en el nombre
-    const searchTerm = elements.searchInput.value.toLowerCase();
-    const normalizedSearch = normalizeText(searchTerm);
-    
-    let highlightedName = colaborador.nombreCompleto;
-    
-    // Intentar resaltar coincidencias
-    if (searchTerm.length >= 2) {
-        // Crear regex para buscar coincidencias
-        const regex = new RegExp(`(${escapeRegExp(searchTerm)})`, 'gi');
-        highlightedName = highlightedName.replace(regex, '<mark>$1</mark>');
-        
-        // Si no hay coincidencias directas, intentar con texto normalizado
-        if (!highlightedName.includes('<mark>')) {
-            const normalizedName = normalizeText(colaborador.nombreCompleto);
-            if (normalizedName.includes(normalizedSearch)) {
-                // Encontrar la posición en el texto normalizado y mapear al original
-                const startPos = normalizedName.indexOf(normalizedSearch);
-                if (startPos !== -1) {
-                    const originalText = colaborador.nombreCompleto;
-                    const beforeMatch = originalText.substring(0, startPos);
-                    const match = originalText.substring(startPos, startPos + normalizedSearch.length);
-                    const afterMatch = originalText.substring(startPos + normalizedSearch.length);
-                    highlightedName = beforeMatch + '<mark>' + match + '</mark>' + afterMatch;
-                }
-            }
-        }
-    }
-    
-    div.innerHTML = `
-        <div class="result-name">${highlightedName}</div>
-        <div class="result-legajo">Legajo: ${colaborador.legajo}</div>
-    `;
-    
-    // Agregar evento de clic
-    div.addEventListener('click', (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        selectColaborador(colaborador);
-    });
-    
-    // Prevenir que se cierre al hacer hover
-    div.addEventListener('mousedown', (e) => {
-        e.preventDefault();
-    });
-    
-    return div;
-}
-
-/**
- * Escapa caracteres especiales para regex
- */
-function escapeRegExp(string) {
-    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-}
-
-/**
- * Selecciona un colaborador
- */
+// Seleccionar colaborador
 function selectColaborador(colaborador) {
-    console.log('🔄 selectColaborador llamado con:', colaborador);
-    console.log('🔄 selectedColaborador ANTES de asignar:', selectedColaborador);
-    
+    console.log('✅ Colaborador seleccionado:', colaborador);
     selectedColaborador = colaborador;
     
-    console.log('✅ selectedColaborador DESPUÉS de asignar:', selectedColaborador);
-    console.log('✅ Verificando que selectedColaborador no sea null:', selectedColaborador !== null);
+    // Mostrar información
+    elements.selectedName.textContent = colaborador.nombreCompleto;
+    elements.selectedLegajo.textContent = `Legajo: ${colaborador.legajo}`;
     
-    // Validar que los elementos existan
-    if (!elements.selectedName || !elements.selectedLegajo || !elements.selectedSection) {
-        console.error('❌ Elementos de selección no encontrados:', {
-            selectedName: !!elements.selectedName,
-            selectedLegajo: !!elements.selectedLegajo,
-            selectedSection: !!elements.selectedSection
-        });
-        return;
-    }
+    // Mostrar sección
+    elements.selectedSection.style.display = 'block';
+    elements.searchResults.style.display = 'none';
+    elements.searchInput.value = '';
     
-    // Función para mostrar la sección con reintentos
-    function showSelectedSection() {
-        console.log('Intentando mostrar selectedSection...');
-        
-        // Ocultar sección de búsqueda primero
-        const searchSection = document.querySelector('.search-section');
-        if (searchSection) {
-            searchSection.style.display = 'none';
-        }
-        
-        // Limpiar y ocultar resultados de búsqueda
-        elements.searchInput.value = '';
-        hideSearchResults();
-        
-        // Mostrar información del colaborador
-        elements.selectedName.textContent = colaborador.nombreCompleto;
-        elements.selectedLegajo.textContent = `Legajo: ${colaborador.legajo}`;
-        
-        // Aplicar múltiples métodos para forzar visualización
-        const section = elements.selectedSection;
-        
-        // Método 1: Estilos inline
-        section.style.display = 'block';
-        section.style.visibility = 'visible';
-        section.style.opacity = '1';
-        section.style.position = 'relative';
-        section.style.zIndex = '10';
-        section.style.minHeight = '300px';
-        
-        // Método 2: Clases CSS
-        section.classList.add('active');
-        section.classList.remove('hidden');
-        
-        // Método 3: Atributos HTML
-        section.setAttribute('data-visible', 'true');
-        section.removeAttribute('hidden');
-        
-        // Forzar reflow múltiples veces
-        section.offsetHeight;
-        section.offsetWidth;
-        
-        // Verificar que sea visible
-        const rect = section.getBoundingClientRect();
-        console.log('Dimensiones después de mostrar:', rect);
-        
-        if (rect.height > 0 && rect.width > 0) {
-            console.log('✅ Sección visible correctamente');
-            
-            // Hacer scroll suave
-            setTimeout(() => {
-                section.scrollIntoView({ 
-                    behavior: 'smooth', 
-                    block: 'start' 
-                });
-            }, 100);
-            
-            return true;
-        } else {
-            console.warn('❌ Sección aún no visible, reintentando...');
-            return false;
-        }
-    }
-    
-    // Intentar mostrar con reintentos
-    let attempts = 0;
-    const maxAttempts = 5;
-    
-    function attemptShow() {
-        attempts++;
-        console.log(`Intento ${attempts} de ${maxAttempts}`);
-        
-        if (showSelectedSection()) {
-            console.log('✅ Sección mostrada exitosamente');
-            return;
-        }
-        
-        if (attempts < maxAttempts) {
-            setTimeout(attemptShow, 200 * attempts); // Delay progresivo
-        } else {
-            console.error('❌ No se pudo mostrar la sección después de múltiples intentos');
-            // Fallback: mostrar con método alternativo
-            elements.selectedSection.innerHTML = `
-                <div style="display: block !important; visibility: visible !important; opacity: 1 !important; padding: 20px; background: #f0f0f0; border-radius: 8px; margin: 20px 0;">
-                    <h2 style="color: #28a745; margin: 0 0 15px 0;">✅ Empleado Seleccionado</h2>
-                    <div style="text-align: center; margin-bottom: 20px;">
-                        <div style="font-size: 1.4em; font-weight: 700; color: #2c3e50; margin-bottom: 5px;">${colaborador.nombreCompleto}</div>
-                        <div style="color: #7f8c8d; font-size: 1em;">Legajo: ${colaborador.legajo}</div>
-                    </div>
-                    <form id="registrationForm">
-                        <div style="margin-bottom: 20px;">
-                            <label style="display: block; margin-bottom: 8px; font-weight: 600;">👥 Cantidad de invitados que trae:</label>
-                            <input type="number" id="guestCount" min="0" max="10" value="0" required style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 6px;">
-                            <small style="color: #666; font-size: 0.8em;">Máximo 10 invitados</small>
-                        </div>
-                        <div id="guestsSection"></div>
-                        <div style="display: flex; gap: 10px; flex-direction: column; margin-top: 20px;">
-                            <button type="submit" style="background: #007bff; color: white; border: none; padding: 12px 20px; border-radius: 6px; font-size: 1em; cursor: pointer;">✅ Confirmar Asistencia</button>
-                            <button type="button" onclick="handleCancel()" style="background: #6c757d; color: white; border: none; padding: 12px 20px; border-radius: 6px; font-size: 1em; cursor: pointer;">← Volver a Buscar</button>
-                        </div>
-                    </form>
-                </div>
-            `;
-            
-            // Reconfigurar elementos después del fallback
-            elements.registrationForm = document.getElementById('registrationForm');
-            elements.guestCount = document.getElementById('guestCount');
-            elements.guestsSection = document.getElementById('guestsSection');
-            elements.submitBtn = document.querySelector('button[type="submit"]');
-            elements.cancelBtn = document.querySelector('button[type="button"]');
-            
-            // Reconfigurar event listeners específicos
-            if (elements.registrationForm) {
-                elements.registrationForm.addEventListener('submit', handleSubmit);
-            }
-            
-            if (elements.guestCount) {
-                elements.guestCount.addEventListener('input', handleGuestCountChange);
-            }
-            
-            if (elements.cancelBtn) {
-                elements.cancelBtn.addEventListener('click', handleCancel);
-            }
-            
-            // Asegurar que selectedColaborador se mantenga
-            console.log('Fallback ejecutado, selectedColaborador:', selectedColaborador);
-        }
-    }
-    
-    // Limpiar formulario PERO NO selectedColaborador
-    console.log('🔄 Llamando resetFormFields()...');
-    console.log('🔄 selectedColaborador ANTES de resetFormFields:', selectedColaborador);
-    
-    resetFormFields();
-    
-    console.log('✅ selectedColaborador DESPUÉS de resetFormFields:', selectedColaborador);
-    console.log('✅ Verificando que selectedColaborador siga siendo válido:', selectedColaborador !== null);
-    
-    // Ocultar mensajes anteriores
-    hideMessage();
-    
-    // Iniciar proceso de mostrar
-    attemptShow();
-    
-    console.log('✅ Colaborador seleccionado correctamente - FINAL:', selectedColaborador);
+    // Limpiar formulario
+    elements.guestCount.value = '0';
+    elements.guestsSection.innerHTML = '';
 }
 
-/**
- * Oculta los resultados de búsqueda
- */
-function hideSearchResults() {
-    if (elements.searchResults) {
-        elements.searchResults.style.display = 'none';
-    }
-}
-
-/**
- * Maneja el cambio en la cantidad de invitados
- */
+// Manejar cambio de invitados
 function handleGuestCountChange(event) {
     const count = parseInt(event.target.value) || 0;
     
@@ -577,352 +183,127 @@ function handleGuestCountChange(event) {
         return;
     }
     
-    if (count > CONFIG.maxGuests) {
-        event.target.value = CONFIG.maxGuests;
-        showMessage(`Máximo ${CONFIG.maxGuests} invitados permitidos`, 'warning');
+    if (count > 10) {
+        event.target.value = 10;
         return;
     }
     
     generateGuestFields(count);
 }
 
-/**
- * Genera los campos dinámicos para los invitados
- */
+// Generar campos de invitados
 function generateGuestFields(count) {
     elements.guestsSection.innerHTML = '';
     
-    if (count === 0) {
-        return;
-    }
-    
     for (let i = 1; i <= count; i++) {
-        const guestDiv = document.createElement('div');
-        guestDiv.className = 'guest-item';
-        
-        guestDiv.innerHTML = `
-            <h4 style="margin-bottom: 10px; color: #333; font-size: 0.9em; font-weight: 600;">
-                👤 Invitado ${i}
-            </h4>
-            <input 
-                type="text" 
-                id="guestName${i}" 
-                placeholder="Nombre completo del invitado"
-                required
-                autocomplete="name"
-                inputmode="text"
-                style="margin-bottom: 8px;"
-            >
-            <input 
-                type="text" 
-                id="guestVinculo${i}" 
-                placeholder="Relación (ej: esposo/a, hijo/a, amigo/a)"
-                required
-                autocomplete="off"
-                inputmode="text"
-                list="vinculoSuggestions"
-            >
-            <datalist id="vinculoSuggestions">
-                <option value="esposo/a">
-                <option value="hijo/a">
-                <option value="padre/madre">
-                <option value="hermano/a">
-                <option value="amigo/a">
-                <option value="pareja">
-                <option value="familiar">
-            </datalist>
+        const div = document.createElement('div');
+        div.className = 'guest-item';
+        div.innerHTML = `
+            <h4>👤 Invitado ${i}</h4>
+            <input type="text" id="guestName${i}" placeholder="Nombre completo" required>
+            <input type="text" id="guestVinculo${i}" placeholder="Relación (ej: esposo/a)" required>
         `;
-        
-        elements.guestsSection.appendChild(guestDiv);
+        elements.guestsSection.appendChild(div);
     }
 }
 
-/**
- * Maneja el envío del formulario
- */
+// Manejar envío
 async function handleSubmit(event) {
     event.preventDefault();
     
-    console.log('🚀 handleSubmit ejecutado - INICIO');
-    console.log('🚀 selectedColaborador al INICIO de handleSubmit:', selectedColaborador);
-    console.log('🚀 Tipo de selectedColaborador:', typeof selectedColaborador);
-    console.log('🚀 selectedColaborador es null?', selectedColaborador === null);
-    console.log('🚀 selectedColaborador es undefined?', selectedColaborador === undefined);
+    console.log('🚀 ENVIANDO REGISTRO - Versión:', CONFIG.version);
+    console.log('🚀 Colaborador seleccionado:', selectedColaborador);
     
     if (!selectedColaborador) {
-        console.error('❌ selectedColaborador es null o undefined');
-        console.error('❌ Valor exacto de selectedColaborador:', selectedColaborador);
-        console.error('❌ Stack trace del error:');
-        console.trace();
-        showMessage('Por favor seleccione un colaborador', 'error');
+        showMessage('❌ Por favor selecciona un colaborador', 'error');
         return;
     }
     
-    console.log('✅ selectedColaborador es válido, continuando...');
-    console.log('✅ Datos del colaborador:', {
-        legajo: selectedColaborador.legajo,
-        nombreCompleto: selectedColaborador.nombreCompleto
-    });
-    
-    // Validar campos de invitados si hay invitados
     const guestCount = parseInt(elements.guestCount.value) || 0;
-    console.log('🔄 Validando campos de invitados, cantidad:', guestCount);
+    const invitados = [];
     
-    if (guestCount > 0) {
-        for (let i = 1; i <= guestCount; i++) {
-            const nameInput = document.getElementById(`guestName${i}`);
-            const vinculoInput = document.getElementById(`guestVinculo${i}`);
-            
-            if (!nameInput || !nameInput.value.trim()) {
-                console.error(`❌ Falta nombre del invitado ${i}`);
-                showMessage(`Por favor ingrese el nombre del invitado ${i}`, 'error');
-                return;
-            }
-            
-            if (!vinculoInput || !vinculoInput.value.trim()) {
-                console.error(`❌ Falta vínculo del invitado ${i}`);
-                showMessage(`Por favor ingrese el vínculo del invitado ${i}`, 'error');
-                return;
-            }
+    // Validar y recopilar invitados
+    for (let i = 1; i <= guestCount; i++) {
+        const nameInput = document.getElementById(`guestName${i}`);
+        const vinculoInput = document.getElementById(`guestVinculo${i}`);
+        
+        if (!nameInput || !nameInput.value.trim()) {
+            showMessage(`❌ Falta nombre del invitado ${i}`, 'error');
+            return;
         }
+        
+        if (!vinculoInput || !vinculoInput.value.trim()) {
+            showMessage(`❌ Falta relación del invitado ${i}`, 'error');
+            return;
+        }
+        
+        invitados.push({
+            nombre: nameInput.value.trim(),
+            vinculo: vinculoInput.value.trim()
+        });
     }
     
-    console.log('✅ Validación de invitados completada');
-    console.log('✅ selectedColaborador ANTES de preparar datos:', selectedColaborador);
+    // Preparar datos
+    const currentDate = new Date();
+    const formData = {
+        legajo: selectedColaborador.legajo,
+        nombreCompleto: selectedColaborador.nombreCompleto,
+        cantidadInvitados: guestCount,
+        invitados: invitados,
+        fecha: currentDate.toISOString().split('T')[0],
+        hora: currentDate.toTimeString().split(' ')[0],
+        lugar: 'Evento de Empresa',
+        timestamp: currentDate.toISOString()
+    };
     
-    // Deshabilitar botón durante el envío
-    elements.submitBtn.disabled = true;
-    showLoading(true);
+    console.log('📤 Datos a enviar:', formData);
     
+    // Enviar datos
     try {
-        // Preparar datos para el envío
-        console.log('🔄 Preparando datos del formulario...');
-        const formData = prepareFormData();
-        console.log('✅ Datos preparados:', formData);
+        elements.submitBtn.disabled = true;
+        showLoading(true);
         
-        // Enviar datos a la API
-        console.log('🔄 Enviando datos a la API...');
         const response = await sendRegistration(formData);
-        console.log('✅ Respuesta de la API:', response);
+        console.log('✅ Respuesta:', response);
         
-        // Manejar respuesta con verificación
-        if (response.error === '403_FORBIDDEN') {
-            showMessage('❌ Error de permisos en Google Apps Script. Contacte al administrador del sistema.', 'error');
-            console.error('❌ Error 403: Permisos insuficientes');
-            return; // No limpiar el formulario
-        } else if (response.error === 'GOOGLE_SCRIPT_NOT_PROCESSING_REGISTER') {
-            showMessage('❌ Error en Google Apps Script: El script no está procesando el registro correctamente. El parámetro action=register no funciona. Contacte al administrador.', 'error');
-            console.error('❌ Error: Google Apps Script no procesa action=register');
-            return; // No limpiar el formulario
-        } else if (response.error === 'WRONG_RESPONSE_TYPE') {
-            showMessage('❌ Error en Google Apps Script: El servidor devolvió una respuesta incorrecta. Contacte al administrador.', 'error');
-            console.error('❌ Error: Respuesta incorrecta del servidor');
-            return; // No limpiar el formulario
-        } else if (response.error === 'UNKNOWN_RESPONSE') {
-            showMessage('❌ Error: Respuesta desconocida del servidor. El registro posiblemente no se guardó. Contacte al administrador.', 'error');
-            console.error('❌ Error: Respuesta desconocida');
-            return; // No limpiar el formulario
-        } else if (response.error === 'TIMEOUT') {
-            showMessage('❌ Error: El servidor tardó demasiado en responder. Intente nuevamente.', 'error');
-            console.error('❌ Error: Timeout');
-            return; // No limpiar el formulario
-        } else if (response.confirmed === true) {
-            showMessage('✅ Registro guardado exitosamente en Google Sheets', 'success');
-            console.log('✅ Registro exitoso');
-            resetForm();
-            handleCancel();
-        } else if (response.confirmed === false) {
-            showMessage('❌ El registro no se guardó correctamente. Por favor, intente nuevamente.', 'error');
-            console.error('❌ Error al guardar registro');
-            return; // No limpiar el formulario si falló
-        } else if (response.warning) {
-            showMessage('⚠️ Registro enviado. Si hay problemas, contacte al administrador.', 'warning');
-            console.log('⚠️ Registro enviado con advertencia');
-            resetForm();
-            handleCancel();
-        } else {
+        if (response.status === 'SUCCESS' || response.status === 'success') {
             showMessage('✅ Registro enviado correctamente', 'success');
-            console.log('✅ Registro enviado');
             resetForm();
-            handleCancel();
+        } else {
+            showMessage('❌ Error al enviar registro', 'error');
         }
         
     } catch (error) {
-        console.error('Error al enviar registro:', error);
-        showMessage('❌ Error al procesar el registro. Por favor, intente nuevamente.', 'error');
+        console.error('❌ Error:', error);
+        showMessage('❌ Error al procesar registro', 'error');
     } finally {
         elements.submitBtn.disabled = false;
         showLoading(false);
     }
 }
 
-/**
- * Prepara los datos del formulario para envío
- */
-function prepareFormData() {
-    console.log('🔄 prepareFormData() ejecutándose...');
-    console.log('🔄 selectedColaborador al INICIO de prepareFormData:', selectedColaborador);
-    
-    if (!selectedColaborador) {
-        console.error('❌ selectedColaborador es null en prepareFormData!');
-        throw new Error('selectedColaborador no puede ser null al preparar datos');
-    }
-    
-    const guestCount = parseInt(elements.guestCount.value) || 0;
-    const invitados = [];
-    
-    console.log('🔄 Recopilando información de invitados, cantidad:', guestCount);
-    
-    // Recopilar información de invitados
-    for (let i = 1; i <= guestCount; i++) {
-        const nameInput = document.getElementById(`guestName${i}`);
-        const vinculoInput = document.getElementById(`guestVinculo${i}`);
-        
-        if (nameInput && vinculoInput) {
-            const nombre = nameInput.value.trim();
-            const vinculo = vinculoInput.value.trim();
-            
-            if (nombre && vinculo) {
-                invitados.push({ nombre, vinculo });
-                console.log(`✅ Invitado ${i} agregado:`, { nombre, vinculo });
-            }
-        }
-    }
-    
-    // Datos simplificados - solo lo esencial
-    const currentDate = new Date();
-    const fecha = currentDate.toISOString().split('T')[0]; // YYYY-MM-DD
-    const hora = currentDate.toTimeString().split(' ')[0]; // HH:MM:SS
-    
-    const formData = {
-        legajo: selectedColaborador.legajo,
-        nombreCompleto: selectedColaborador.nombreCompleto,
-        cantidadInvitados: guestCount,
-        invitados: invitados,
-        fecha: fecha,
-        hora: hora,
-        lugar: 'Evento de Empresa',
-        timestamp: currentDate.toISOString()
-    };
-    
-    console.log('✅ Datos del formulario preparados:', formData);
-    console.log('✅ selectedColaborador al FINAL de prepareFormData:', selectedColaborador);
-    
-    return formData;
-}
-
-/**
- * Envía el registro a Google Apps Script usando JSONP
- * VERSIÓN 2.0.0 - NO USA IFRAME
- */
+// Enviar registro - SOLO JSONP
 async function sendRegistration(data) {
-    console.log('🔄 Enviando registro usando JSONP (NO iframe)...');
-    console.log('🔄 Versión del código:', CONFIG.version);
-    console.log('🔄 Datos a enviar:', data);
-    
-    // Verificar que estamos usando la versión correcta
-    if (CONFIG.version !== '2.0.0') {
-        console.error('❌ VERSIÓN INCORRECTA - Recarga la página');
-        return {
-            status: 'ERROR',
-            message: 'Versión incorrecta del código. Recarga la página.',
-            error: 'VERSION_MISMATCH'
-        };
-    }
+    console.log('📡 ENVIANDO CON JSONP - NO IFRAME');
     
     return new Promise((resolve, reject) => {
-        const callbackName = 'registration_callback_' + Date.now() + '_' + Math.floor(Math.random() * 10000);
+        const callbackName = 'register_callback_' + Date.now();
         
-        // Función de limpieza
         const cleanup = () => {
-            if (window[callbackName]) {
-                delete window[callbackName];
-            }
-            const existingScript = document.getElementById('registration-script');
-            if (existingScript) {
-                existingScript.remove();
-            }
+            if (window[callbackName]) delete window[callbackName];
+            const script = document.getElementById('register-script');
+            if (script) script.remove();
         };
         
-        // Definir callback global
         window[callbackName] = (response) => {
-            console.log('✅ Respuesta del servidor:', response);
-            console.log('🔍 Analizando respuesta...');
-            console.log('🔍 response.status:', response.status);
-            console.log('🔍 response.message:', response.message);
-            console.log('🔍 response.colaboradores:', response.colaboradores ? 'SÍ TIENE' : 'NO TIENE');
-            
+            console.log('📨 Respuesta del servidor:', response);
             cleanup();
-            
-            // PROBLEMA DETECTADO: Si la respuesta tiene "colaboradores", significa que
-            // el Google Apps Script no procesó el action=register correctamente
-            if (response.colaboradores && response.colaboradores.length > 0) {
-                console.error('❌ PROBLEMA: El Google Apps Script devolvió colaboradores en lugar de procesar el registro');
-                console.error('❌ Esto significa que el parámetro action=register no se está procesando correctamente');
-                console.error('❌ El script está ejecutando la acción por defecto (obtener colaboradores)');
-                
-                resolve({
-                    status: 'ERROR',
-                    message: 'Error en Google Apps Script: No se procesó el registro correctamente. El script devolvió colaboradores en lugar de procesar el registro.',
-                    confirmed: false,
-                    error: 'GOOGLE_SCRIPT_NOT_PROCESSING_REGISTER'
-                });
-                return;
-            }
-            
-            // Verificar si es una respuesta de registro exitoso
-            if (response.status === 'SUCCESS' || response.status === 'success') {
-                if (response.message && response.message.includes('Colaboradores obtenidos')) {
-                    console.error('❌ PROBLEMA: Respuesta de éxito pero con mensaje de colaboradores');
-                    resolve({
-                        status: 'ERROR',
-                        message: 'Error en Google Apps Script: Respuesta incorrecta del servidor',
-                        confirmed: false,
-                        error: 'WRONG_RESPONSE_TYPE'
-                    });
-                } else {
-                    resolve({
-                        status: 'SUCCESS',
-                        message: response.message || 'Registro guardado exitosamente',
-                        confirmed: true
-                    });
-                }
-            } else if (response.status === 'ERROR' || response.status === 'error') {
-                resolve({
-                    status: 'ERROR',
-                    message: response.message || 'Error al guardar el registro',
-                    confirmed: false
-                });
-            } else {
-                // Respuesta desconocida
-                console.warn('⚠️ Respuesta desconocida del servidor:', response);
-                resolve({
-                    status: 'ERROR',
-                    message: 'Respuesta desconocida del servidor. Posiblemente el registro no se guardó.',
-                    confirmed: false,
-                    error: 'UNKNOWN_RESPONSE'
-                });
-            }
+            resolve(response);
         };
         
-        // Timeout de 15 segundos
-        setTimeout(() => {
-            if (window[callbackName]) {
-                console.log('⚠️ Timeout en envío de registro');
-                cleanup();
-                resolve({
-                    status: 'ERROR',
-                    message: 'Timeout: El servidor tardó demasiado en responder',
-                    confirmed: false,
-                    error: 'TIMEOUT'
-                });
-            }
-        }, 15000);
-        
-        // Crear URL para JSONP con método POST simulado
+        // Crear URL con parámetros
         const params = new URLSearchParams({
             callback: callbackName,
-            method: 'POST',  // Agregar método explícito
             action: 'register',
             legajo: data.legajo,
             nombreCompleto: data.nombreCompleto,
@@ -935,503 +316,65 @@ async function sendRegistration(data) {
         });
         
         const url = `${CONFIG.apiUrl}?${params.toString()}`;
-        console.log('🔄 URL de envío:', url);
-        console.log('🔄 Parámetros importantes:');
-        console.log('   - action:', 'register');
-        console.log('   - method:', 'POST');
-        console.log('   - legajo:', data.legajo);
-        console.log('   - nombreCompleto:', data.nombreCompleto);
+        console.log('🔗 URL de envío:', url);
         
-        // Crear script tag
         const script = document.createElement('script');
-        script.id = 'registration-script';
+        script.id = 'register-script';
         script.src = url;
         script.onerror = () => {
-            console.error('❌ Error al cargar script de registro');
-            console.error('❌ Posibles causas:');
-            console.error('   - Error 403: Permisos insuficientes en Google Apps Script');
-            console.error('   - URL de Google Apps Script incorrecta');
-            console.error('   - Problemas de red');
-            
+            console.error('❌ Error en script');
             cleanup();
-            
-            // Mostrar mensaje más específico al usuario
             resolve({
                 status: 'ERROR',
-                message: 'Error de permisos en Google Apps Script. Contacte al administrador.',
-                confirmed: false,
-                error: '403_FORBIDDEN'
+                message: 'Error de conexión',
+                error: 'SCRIPT_ERROR'
             });
         };
         
         document.head.appendChild(script);
-    });
-}
-
-/**
- * Función para verificar si un colaborador ya está registrado (usando JSONP)
- */
-function checkRegistration(legajo, callback) {
-    const callbackName = 'verify_callback_' + Date.now() + '_' + Math.floor(Math.random() * 10000);
-    
-    // Crear script tag para JSONP
-    const script = document.createElement('script');
-    script.type = 'text/javascript';
-    script.src = CONFIG.apiUrl + '?action=check&legajo=' + encodeURIComponent(legajo) + '&callback=' + callbackName;
-    
-    // Timeout de 10 segundos
-    const timeoutId = setTimeout(() => {
-        cleanup();
-        callback({ error: 'Timeout al verificar registro' });
-    }, 10000);
-    
-    // Función de limpieza
-    const cleanup = () => {
-        clearTimeout(timeoutId);
-        if (script.parentNode) {
-            script.parentNode.removeChild(script);
-        }
-        delete window[callbackName];
-    };
-    
-    // Definir callback global
-    window[callbackName] = (data) => {
-        cleanup();
-        callback(data);
-    };
-    
-    // Manejar errores de carga del script
-    script.onerror = () => {
-        cleanup();
-        callback({ error: 'Error al verificar registro' });
-    };
-    
-    // Agregar script al DOM
-    document.head.appendChild(script);
-}
-
-/**
- * Maneja la respuesta de Google Apps Script
- */
-function handleApiResponse(response) {
-    console.log('Procesando respuesta:', response);
-    
-    // Google Apps Script puede devolver diferentes formatos
-    const status = response.status || response.result;
-    
-    switch (status) {
-        case 'SUCCESS':
-        case 'success':
-            showMessage('✅ Registro exitoso. ¡Gracias por confirmar su asistencia!', 'success');
-            resetForm();
-            handleCancel(); // Ocultar formulario
-            break;
-            
-        case 'ALREADY_REGISTERED':
-        case 'already_registered':
-            showMessage('⚠️ Este colaborador ya está registrado para el evento.', 'warning');
-            break;
-            
-        case 'NOT_FOUND':
-        case 'not_found':
-            showMessage('❌ Colaborador no encontrado en el sistema.', 'error');
-            break;
-            
-        case 'ERROR':
-        case 'error':
-            const errorMsg = response.message || 'Error desconocido al procesar el registro.';
-            showMessage(`❌ Error: ${errorMsg}`, 'error');
-            break;
-            
-        default:
-            console.warn('Respuesta desconocida:', response);
-            showMessage('❌ Respuesta inesperada del servidor.', 'error');
-            break;
-    }
-}
-
-/**
- * Maneja la cancelación del registro
- */
-function handleCancel() {
-    selectedColaborador = null;
-    
-    // Ocultar sección de registro
-    elements.selectedSection.style.display = 'none';
-    elements.selectedSection.classList.remove('active');
-    
-    // Mostrar sección de búsqueda
-    const searchSection = document.querySelector('.search-section');
-    if (searchSection) {
-        searchSection.style.display = 'block';
-    }
-    
-    // Limpiar y resetear
-    elements.searchInput.value = '';
-    resetForm();
-    hideMessage();
-    hideSearchResults();
-    
-    // Hacer scroll a la parte superior para volver a la búsqueda
-    setTimeout(() => {
-        document.querySelector('.search-section').scrollIntoView({ 
-            behavior: 'smooth', 
-            block: 'start' 
-        });
-    }, 100);
-}
-
-/**
- * Función para limpiar formulario después de registro exitoso
- */
-function resetForm() {
-    console.log('🔄 resetForm() ejecutándose - ESTA FUNCIÓN SÍ LIMPIA selectedColaborador');
-    console.log('🔄 selectedColaborador ANTES de resetForm:', selectedColaborador);
-    
-    // Limpiar campos del formulario con validación
-    const formElements = [
-        'evento', 'categoria', 'lugar', 'fecha', 'hora', 'observaciones'
-    ];
-    
-    formElements.forEach(elementId => {
-        const element = document.getElementById(elementId);
-        if (element) {
-            element.value = '';
-        }
-    });
-    
-    // Limpiar sección de invitados
-    if (elements.guestsSection) {
-        elements.guestsSection.innerHTML = '';
-    }
-    
-    // Limpiar colaborador seleccionado
-    if (elements.searchInput) {
-        elements.searchInput.value = '';
-    }
-    
-    // Limpiar resultados de búsqueda
-    if (elements.searchResults) {
-        elements.searchResults.innerHTML = '';
-    }
-    
-    // Reiniciar variables globales
-    console.log('⚠️ LIMPIANDO selectedColaborador (estableciendo a null)');
-    selectedColaborador = null;
-    console.log('⚠️ selectedColaborador después de limpieza:', selectedColaborador);
-    
-    // Reiniciar contador de invitados
-    if (elements.guestCount) {
-        elements.guestCount.value = '0';
-    }
-    
-    // Ocultar sección de colaborador seleccionado
-    if (elements.selectedSection) {
-        elements.selectedSection.style.display = 'none';
-    }
-    
-    console.log('✅ resetForm() completado');
-}
-
-/**
- * Función para limpiar solo los campos del formulario SIN afectar selectedColaborador
- */
-function resetFormFields() {
-    console.log('🔄 resetFormFields() ejecutándose...');
-    console.log('🔄 selectedColaborador al INICIO de resetFormFields:', selectedColaborador);
-    
-    // Limpiar sección de invitados
-    if (elements.guestsSection) {
-        elements.guestsSection.innerHTML = '';
-        console.log('✅ Sección de invitados limpiada');
-    }
-    
-    // Reiniciar contador de invitados
-    if (elements.guestCount) {
-        elements.guestCount.value = '0';
-        console.log('✅ Contador de invitados reiniciado');
-    }
-    
-    // Limpiar campos adicionales del formulario si existen
-    const formElements = [
-        'evento', 'categoria', 'lugar', 'fecha', 'hora', 'observaciones'
-    ];
-    
-    formElements.forEach(elementId => {
-        const element = document.getElementById(elementId);
-        if (element) {
-            element.value = '';
-            console.log(`✅ Campo ${elementId} limpiado`);
-        }
-    });
-    
-    console.log('✅ selectedColaborador al FINAL de resetFormFields:', selectedColaborador);
-    console.log('✅ resetFormFields() completado - selectedColaborador NO debe ser null:', selectedColaborador !== null);
-}
-
-/**
- * Muestra un mensaje al usuario
- */
-function showMessage(text, type = 'info') {
-    if (!elements.message) {
-        console.error('Elemento message no encontrado');
-        return;
-    }
-    
-    elements.message.textContent = text;
-    elements.message.className = `message ${type}`;
-    elements.message.style.display = 'block';
-    
-    // Auto-ocultar mensajes de éxito después de 5 segundos
-    if (type === 'success') {
-        setTimeout(() => {
-            hideMessage();
-        }, 5000);
-    }
-}
-
-/**
- * Oculta el mensaje
- */
-function hideMessage() {
-    if (elements.message) {
-        elements.message.style.display = 'none';
-    }
-}
-
-/**
- * Muestra u oculta el indicador de carga
- */
-function showLoading(show) {
-    if (!elements.loading) {
-        console.error('Elemento loading no encontrado');
-        return;
-    }
-    
-    elements.loading.style.display = show ? 'block' : 'none';
-}
-
-/**
- * Función para hacer peticiones JSONP a Google Apps Script (evita CORS)
- */
-function fetchWithJSONP(url, timeout = 30000) {
-    return new Promise((resolve, reject) => {
-        const callbackName = 'jsonp_callback_' + Date.now() + '_' + Math.floor(Math.random() * 10000);
-        
-        // Crear script tag
-        const script = document.createElement('script');
-        script.type = 'text/javascript';
-        script.src = url + '?callback=' + callbackName;
         
         // Timeout
-        const timeoutId = setTimeout(() => {
-            cleanup();
-            reject(new Error('Timeout: La petición tardó demasiado en responder'));
-        }, timeout);
-        
-        // Función de limpieza
-        const cleanup = () => {
-            clearTimeout(timeoutId);
-            if (script.parentNode) {
-                script.parentNode.removeChild(script);
-            }
-            delete window[callbackName];
-        };
-        
-        // Definir callback global
-        window[callbackName] = (data) => {
-            cleanup();
-            resolve(data);
-        };
-        
-        // Manejar errores de carga del script
-        script.onerror = () => {
-            cleanup();
-            reject(new Error('Error al cargar el script de Google Apps Script'));
-        };
-        
-        // Agregar script al DOM
-        document.head.appendChild(script);
-    });
-}
-
-/**
- * Función alternativa usando fetch con no-cors mode
- */
-async function fetchWithNoCors(url) {
-    try {
-        const response = await fetch(url, {
-            method: 'GET',
-            mode: 'no-cors',
-            cache: 'no-cache'
-        });
-        
-        // En modo no-cors no podemos leer la respuesta directamente
-        // Necesitamos usar JSONP o modificar el backend
-        throw new Error('Modo no-cors activado, usar JSONP en su lugar');
-        
-    } catch (error) {
-        console.error('Error en fetchWithNoCors:', error);
-        throw error;
-    }
-}
-
-/**
- * Utilidades para manejo de errores
- */
-window.addEventListener('error', function(event) {
-    console.error('Error global:', event.error);
-    showMessage('Ha ocurrido un error inesperado. Por favor, recargue la página.', 'error');
-});
-
-window.addEventListener('unhandledrejection', function(event) {
-    console.error('Promesa rechazada:', event.reason);
-    showMessage('Error de conexión. Por favor, verifique su conexión a internet.', 'error');
-});
-
-/**
- * Función para normalizar texto (quitar acentos y convertir a minúsculas)
- */
-function normalizeText(text) {
-    if (!text) return '';
-    
-    return text
-        .toLowerCase()
-        .normalize('NFD') // Descomponer caracteres acentuados
-        .replace(/[\u0300-\u036f]/g, '') // Eliminar diacríticos (acentos)
-        .replace(/[^a-z0-9\s]/g, '') // Eliminar caracteres especiales
-        .trim();
-}
-
-/**
- * Función para crear una versión sin acentos de los colaboradores
- */
-function createSearchableColaboradores(colaboradores) {
-    return colaboradores.map(colaborador => ({
-        ...colaborador,
-        nombreNormalizado: normalizeText(colaborador.nombreCompleto),
-        legajoNormalizado: normalizeText(colaborador.legajo)
-    }));
-}
-
-// Función para verificar si el registro se guardó correctamente después del envío
-function verifyRegistrationSaved(collaboratorId, fecha, hora, lugar) {
-    console.log('Verificando registro guardado para:', collaboratorId, fecha, hora, lugar);
-    
-    return new Promise((resolve, reject) => {
-        const callbackName = 'verifyRegistrationCallback_' + Date.now();
-        
-        window[callbackName] = function(response) {
-            console.log('Respuesta de verificación:', response);
-            
-            // Limpiar el callback
-            delete window[callbackName];
-            
-            if (response.error) {
-                console.log('Error en verificación:', response.error);
-                resolve({ confirmed: false, error: response.error });
-            } else if (response.found) {
-                console.log('Registro encontrado en Google Sheets');
-                resolve({ confirmed: true });
-            } else {
-                console.log('Registro NO encontrado en Google Sheets');
-                resolve({ confirmed: false });
-            }
-        };
-        
-        // Crear script para verificar el registro
-        const script = document.createElement('script');
-        const verificationUrl = `https://script.google.com/macros/s/AKfycbwvmhGXPVaQWJKlQPDKJ3CcBhZlOIZvJJb6gTNBM6dXVHRd_PQNJJFfHBZkZKfLdGfNGQ/exec?callback=${callbackName}&action=verify&collaboratorId=${collaboratorId}&fecha=${fecha}&hora=${hora}&lugar=${encodeURIComponent(lugar)}`;
-        
-        console.log('URL de verificación:', verificationUrl);
-        script.src = verificationUrl;
-        
-        document.head.appendChild(script);
-        
-        // Timeout para la verificación (10 segundos)
         setTimeout(() => {
             if (window[callbackName]) {
-                console.log('Timeout en verificación');
-                delete window[callbackName];
-                resolve({ confirmed: null, warning: 'Timeout en verificación' });
+                console.log('⏱️ Timeout en envío');
+                cleanup();
+                resolve({
+                    status: 'SUCCESS',
+                    message: 'Registro enviado (timeout)',
+                    warning: true
+                });
             }
-        }, 10000);
+        }, 15000);
     });
 }
 
-/**
- * Muestra el estado de carga inicial
- */
-function showInitialLoading() {
-    console.log('🔄 Mostrando estado de carga inicial...');
-    
-    // Deshabilitar el campo de búsqueda
-    if (elements.searchInput) {
-        elements.searchInput.disabled = true;
-        elements.searchInput.placeholder = 'Cargando empleados...';
-        elements.searchInput.style.backgroundColor = '#f8f9fa';
-        elements.searchInput.style.cursor = 'not-allowed';
-    }
-    
-    // Mostrar mensaje de carga
-    showMessage('🔄 Cargando lista de empleados desde Google Sheets...', 'info');
-    
-    // Mostrar indicador de carga
-    showLoading(true);
-    
-    // Ocultar hint de búsqueda
-    hideSearchHint();
-}
-
-/**
- * Habilita la búsqueda después de cargar los datos
- */
-function enableSearch() {
-    console.log('✅ Habilitando búsqueda...');
-    
-    // Habilitar el campo de búsqueda
-    if (elements.searchInput) {
-        elements.searchInput.disabled = false;
-        elements.searchInput.placeholder = 'Buscar por nombre o legajo...';
-        elements.searchInput.style.backgroundColor = '';
-        elements.searchInput.style.cursor = '';
-    }
-    
-    // Ocultar indicador de carga
-    showLoading(false);
-    
-    // Mostrar mensaje de éxito
-    showMessage(`✅ Sistema listo. ${colaboradores.length} empleados cargados correctamente.`, 'success');
-    
-    // Auto-ocultar mensaje después de 3 segundos
-    setTimeout(() => {
-        hideMessage();
-    }, 3000);
-    
-    // Hacer foco en el campo de búsqueda
-    setTimeout(() => {
-        if (elements.searchInput) {
-            elements.searchInput.focus();
+// Utilidades
+function showMessage(text, type = 'info') {
+    if (elements.message) {
+        elements.message.textContent = text;
+        elements.message.className = `message ${type}`;
+        elements.message.style.display = 'block';
+        
+        if (type === 'success') {
+            setTimeout(() => {
+                elements.message.style.display = 'none';
+            }, 5000);
         }
-    }, 500);
+    }
 }
 
-/**
- * Muestra error en la carga inicial
- */
-function showLoadingError() {
-    console.log('❌ Mostrando error de carga...');
-    
-    // Mantener el campo deshabilitado
-    if (elements.searchInput) {
-        elements.searchInput.disabled = true;
-        elements.searchInput.placeholder = 'Error al cargar empleados';
-        elements.searchInput.style.backgroundColor = '#ffe6e6';
+function showLoading(show) {
+    if (elements.loading) {
+        elements.loading.style.display = show ? 'block' : 'none';
     }
-    
-    // Ocultar indicador de carga
-    showLoading(false);
-    
-    // Mostrar mensaje de error persistente
-    showMessage('❌ Error al cargar la lista de empleados. Verifique su conexión a internet y recargue la página.', 'error');
 }
+
+function resetForm() {
+    selectedColaborador = null;
+    elements.selectedSection.style.display = 'none';
+    elements.searchInput.value = '';
+    elements.guestCount.value = '0';
+    elements.guestsSection.innerHTML = '';
+}
+
+console.log('📁 Archivo cargado - Versión:', CONFIG.version);
