@@ -1,6 +1,7 @@
 /**
  * Sistema de Registro de Asistencia para Eventos de Empresa
  * Utiliza Fuse.js para búsqueda difusa de colaboradores
+ * Versión: 2.0.0 - JSONP Implementation
  */
 
 // Configuración de la aplicación
@@ -13,7 +14,8 @@ const CONFIG = {
     // Configuración específica para Google Apps Script
     requestTimeout: 30000, // 30 segundos de timeout para Google Apps Script
     retryAttempts: 3, // Número de intentos en caso de error
-    retryDelay: 1000 // Retraso entre intentos en ms
+    retryDelay: 1000, // Retraso entre intentos en ms
+    version: '2.0.0'
 };
 
 // Variables globales
@@ -49,7 +51,9 @@ document.addEventListener('DOMContentLoaded', async function() {
     // Inicializar Fuse.js para búsqueda
     initializeFuse();
     
-    console.log('Aplicación inicializada correctamente');
+    console.log('✅ Aplicación inicializada correctamente - Versión:', CONFIG.version);
+    console.log('📌 Método de envío: JSONP (NO iframe)');
+    console.log('📌 Si aparece "iframe" en los logs, hay un problema de caché');
 });
 
 /**
@@ -781,10 +785,22 @@ function prepareFormData() {
 
 /**
  * Envía el registro a Google Apps Script usando JSONP
+ * VERSIÓN 2.0.0 - NO USA IFRAME
  */
 async function sendRegistration(data) {
-    console.log('🔄 Enviando registro usando JSONP...');
+    console.log('🔄 Enviando registro usando JSONP (NO iframe)...');
+    console.log('🔄 Versión del código:', CONFIG.version);
     console.log('🔄 Datos a enviar:', data);
+    
+    // Verificar que estamos usando la versión correcta
+    if (CONFIG.version !== '2.0.0') {
+        console.error('❌ VERSIÓN INCORRECTA - Recarga la página');
+        return {
+            status: 'ERROR',
+            message: 'Versión incorrecta del código. Recarga la página.',
+            error: 'VERSION_MISMATCH'
+        };
+    }
     
     return new Promise((resolve, reject) => {
         const callbackName = 'registration_callback_' + Date.now() + '_' + Math.floor(Math.random() * 10000);
