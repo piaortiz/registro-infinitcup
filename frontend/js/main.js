@@ -509,8 +509,8 @@ function selectColaborador(colaborador) {
         }
     }
     
-    // Limpiar formulario
-    resetForm();
+    // Limpiar formulario PERO NO selectedColaborador
+    resetFormFields();
     
     // Ocultar mensajes anteriores
     hideMessage();
@@ -999,6 +999,33 @@ function resetForm() {
     if (elements.selectedSection) {
         elements.selectedSection.style.display = 'none';
     }
+}
+
+/**
+ * Función para limpiar solo los campos del formulario SIN afectar selectedColaborador
+ */
+function resetFormFields() {
+    // Limpiar sección de invitados
+    if (elements.guestsSection) {
+        elements.guestsSection.innerHTML = '';
+    }
+    
+    // Reiniciar contador de invitados
+    if (elements.guestCount) {
+        elements.guestCount.value = '0';
+    }
+    
+    // Limpiar campos adicionales del formulario si existen
+    const formElements = [
+        'evento', 'categoria', 'lugar', 'fecha', 'hora', 'observaciones'
+    ];
+    
+    formElements.forEach(elementId => {
+        const element = document.getElementById(elementId);
+        if (element) {
+            element.value = '';
+        }
+    });
 }
 
 /**
