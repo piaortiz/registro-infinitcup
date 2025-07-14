@@ -23,6 +23,16 @@ let selectedColaborador = null;
 let searchTimeout = null;
 let elements = {}; // Objeto para almacenar referencias a elementos del DOM
 
+// Función para rastrear cambios en selectedColaborador
+function setSelectedColaborador(newValue, location) {
+    console.log(`🔄 selectedColaborador cambiado en ${location}:`);
+    console.log(`   - Valor anterior:`, selectedColaborador);
+    console.log(`   - Valor nuevo:`, newValue);
+    console.log(`   - Stack trace:`);
+    console.trace();
+    selectedColaborador = newValue;
+}
+
 /**
  * Inicializa la aplicación cuando el DOM está cargado
  */
@@ -367,13 +377,17 @@ function escapeRegExp(string) {
  * Selecciona un colaborador
  */
 function selectColaborador(colaborador) {
-    console.log('selectColaborador llamado con:', colaborador);
+    console.log('🔄 selectColaborador llamado con:', colaborador);
+    console.log('🔄 selectedColaborador ANTES de asignar:', selectedColaborador);
     
     selectedColaborador = colaborador;
     
+    console.log('✅ selectedColaborador DESPUÉS de asignar:', selectedColaborador);
+    console.log('✅ Verificando que selectedColaborador no sea null:', selectedColaborador !== null);
+    
     // Validar que los elementos existan
     if (!elements.selectedName || !elements.selectedLegajo || !elements.selectedSection) {
-        console.error('Elementos de selección no encontrados:', {
+        console.error('❌ Elementos de selección no encontrados:', {
             selectedName: !!elements.selectedName,
             selectedLegajo: !!elements.selectedLegajo,
             selectedSection: !!elements.selectedSection
@@ -510,7 +524,13 @@ function selectColaborador(colaborador) {
     }
     
     // Limpiar formulario PERO NO selectedColaborador
+    console.log('🔄 Llamando resetFormFields()...');
+    console.log('🔄 selectedColaborador ANTES de resetFormFields:', selectedColaborador);
+    
     resetFormFields();
+    
+    console.log('✅ selectedColaborador DESPUÉS de resetFormFields:', selectedColaborador);
+    console.log('✅ Verificando que selectedColaborador siga siendo válido:', selectedColaborador !== null);
     
     // Ocultar mensajes anteriores
     hideMessage();
@@ -518,7 +538,7 @@ function selectColaborador(colaborador) {
     // Iniciar proceso de mostrar
     attemptShow();
     
-    console.log('Colaborador seleccionado correctamente:', colaborador);
+    console.log('✅ Colaborador seleccionado correctamente - FINAL:', selectedColaborador);
 }
 
 /**
@@ -607,32 +627,52 @@ function generateGuestFields(count) {
 async function handleSubmit(event) {
     event.preventDefault();
     
-    console.log('handleSubmit ejecutado, selectedColaborador:', selectedColaborador);
+    console.log('🚀 handleSubmit ejecutado - INICIO');
+    console.log('🚀 selectedColaborador al INICIO de handleSubmit:', selectedColaborador);
+    console.log('🚀 Tipo de selectedColaborador:', typeof selectedColaborador);
+    console.log('🚀 selectedColaborador es null?', selectedColaborador === null);
+    console.log('🚀 selectedColaborador es undefined?', selectedColaborador === undefined);
     
     if (!selectedColaborador) {
-        console.error('selectedColaborador es null o undefined');
+        console.error('❌ selectedColaborador es null o undefined');
+        console.error('❌ Valor exacto de selectedColaborador:', selectedColaborador);
+        console.error('❌ Stack trace del error:');
+        console.trace();
         showMessage('Por favor seleccione un colaborador', 'error');
         return;
     }
     
+    console.log('✅ selectedColaborador es válido, continuando...');
+    console.log('✅ Datos del colaborador:', {
+        legajo: selectedColaborador.legajo,
+        nombreCompleto: selectedColaborador.nombreCompleto
+    });
+    
     // Validar campos de invitados si hay invitados
     const guestCount = parseInt(elements.guestCount.value) || 0;
+    console.log('🔄 Validando campos de invitados, cantidad:', guestCount);
+    
     if (guestCount > 0) {
         for (let i = 1; i <= guestCount; i++) {
             const nameInput = document.getElementById(`guestName${i}`);
             const vinculoInput = document.getElementById(`guestVinculo${i}`);
             
             if (!nameInput || !nameInput.value.trim()) {
+                console.error(`❌ Falta nombre del invitado ${i}`);
                 showMessage(`Por favor ingrese el nombre del invitado ${i}`, 'error');
                 return;
             }
             
             if (!vinculoInput || !vinculoInput.value.trim()) {
+                console.error(`❌ Falta vínculo del invitado ${i}`);
                 showMessage(`Por favor ingrese el vínculo del invitado ${i}`, 'error');
                 return;
             }
         }
     }
+    
+    console.log('✅ Validación de invitados completada');
+    console.log('✅ selectedColaborador ANTES de preparar datos:', selectedColaborador);
     
     // Deshabilitar botón durante el envío
     elements.submitBtn.disabled = true;
@@ -640,10 +680,14 @@ async function handleSubmit(event) {
     
     try {
         // Preparar datos para el envío
+        console.log('🔄 Preparando datos del formulario...');
         const formData = prepareFormData();
+        console.log('✅ Datos preparados:', formData);
         
         // Enviar datos a la API
+        console.log('🔄 Enviando datos a la API...');
         const response = await sendRegistration(formData);
+        console.log('✅ Respuesta de la API:', response);
         
         // Manejar respuesta con verificación
         if (response.confirmed === true) {
@@ -679,8 +723,18 @@ async function handleSubmit(event) {
  * Prepara los datos del formulario para envío
  */
 function prepareFormData() {
+    console.log('🔄 prepareFormData() ejecutándose...');
+    console.log('🔄 selectedColaborador al INICIO de prepareFormData:', selectedColaborador);
+    
+    if (!selectedColaborador) {
+        console.error('❌ selectedColaborador es null en prepareFormData!');
+        throw new Error('selectedColaborador no puede ser null al preparar datos');
+    }
+    
     const guestCount = parseInt(elements.guestCount.value) || 0;
     const invitados = [];
+    
+    console.log('🔄 Recopilando información de invitados, cantidad:', guestCount);
     
     // Recopilar información de invitados
     for (let i = 1; i <= guestCount; i++) {
@@ -693,6 +747,7 @@ function prepareFormData() {
             
             if (nombre && vinculo) {
                 invitados.push({ nombre, vinculo });
+                console.log(`✅ Invitado ${i} agregado:`, { nombre, vinculo });
             }
         }
     }
@@ -705,7 +760,7 @@ function prepareFormData() {
     const horaInput = document.getElementById('hora');
     const observacionesInput = document.getElementById('observaciones');
     
-    return {
+    const formData = {
         legajo: selectedColaborador.legajo,
         nombreCompleto: selectedColaborador.nombreCompleto,
         invitados: invitados,
@@ -716,6 +771,11 @@ function prepareFormData() {
         hora: horaInput ? horaInput.value.trim() : '',
         observaciones: observacionesInput ? observacionesInput.value.trim() : ''
     };
+    
+    console.log('✅ Datos del formulario preparados:', formData);
+    console.log('✅ selectedColaborador al FINAL de prepareFormData:', selectedColaborador);
+    
+    return formData;
 }
 
 /**
@@ -960,6 +1020,9 @@ function handleCancel() {
  * Función para limpiar formulario después de registro exitoso
  */
 function resetForm() {
+    console.log('🔄 resetForm() ejecutándose - ESTA FUNCIÓN SÍ LIMPIA selectedColaborador');
+    console.log('🔄 selectedColaborador ANTES de resetForm:', selectedColaborador);
+    
     // Limpiar campos del formulario con validación
     const formElements = [
         'evento', 'categoria', 'lugar', 'fecha', 'hora', 'observaciones'
@@ -988,7 +1051,9 @@ function resetForm() {
     }
     
     // Reiniciar variables globales
+    console.log('⚠️ LIMPIANDO selectedColaborador (estableciendo a null)');
     selectedColaborador = null;
+    console.log('⚠️ selectedColaborador después de limpieza:', selectedColaborador);
     
     // Reiniciar contador de invitados
     if (elements.guestCount) {
@@ -999,20 +1064,27 @@ function resetForm() {
     if (elements.selectedSection) {
         elements.selectedSection.style.display = 'none';
     }
+    
+    console.log('✅ resetForm() completado');
 }
 
 /**
  * Función para limpiar solo los campos del formulario SIN afectar selectedColaborador
  */
 function resetFormFields() {
+    console.log('🔄 resetFormFields() ejecutándose...');
+    console.log('🔄 selectedColaborador al INICIO de resetFormFields:', selectedColaborador);
+    
     // Limpiar sección de invitados
     if (elements.guestsSection) {
         elements.guestsSection.innerHTML = '';
+        console.log('✅ Sección de invitados limpiada');
     }
     
     // Reiniciar contador de invitados
     if (elements.guestCount) {
         elements.guestCount.value = '0';
+        console.log('✅ Contador de invitados reiniciado');
     }
     
     // Limpiar campos adicionales del formulario si existen
@@ -1024,8 +1096,12 @@ function resetFormFields() {
         const element = document.getElementById(elementId);
         if (element) {
             element.value = '';
+            console.log(`✅ Campo ${elementId} limpiado`);
         }
     });
+    
+    console.log('✅ selectedColaborador al FINAL de resetFormFields:', selectedColaborador);
+    console.log('✅ resetFormFields() completado - selectedColaborador NO debe ser null:', selectedColaborador !== null);
 }
 
 /**
