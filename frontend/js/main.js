@@ -71,7 +71,21 @@ async function loadColaboradores() {
         }
         
         console.log(`✅ Cargados ${colaboradores.length} colaboradores`);
-        showMessage(`✅ Cargados ${colaboradores.length} colaboradores`, 'success');
+        
+        // Mostrar mensaje de éxito temporal
+        setTimeout(() => {
+            const message = elements.message;
+            if (message) {
+                message.innerHTML = `✅ ${colaboradores.length} colaboradores cargados correctamente`;
+                message.className = 'message success';
+                message.style.display = 'block';
+                
+                setTimeout(() => {
+                    message.style.display = 'none';
+                }, 3000);
+            }
+        }, 500);
+        
         hideInitialLoading();
         
     } catch (error) {
@@ -445,11 +459,28 @@ function toggleTheme() {
 
 // Loading state management
 function showInitialLoading() {
-    const searchInput = elements.searchInput;
-    const searchSection = document.querySelector('.search-section');
-    const message = elements.message;
+    // Crear popup de carga inicial
+    let loadingContainer = document.getElementById('initialLoading');
     
-    // Deshabilitar campo de búsqueda
+    if (!loadingContainer) {
+        loadingContainer = document.createElement('div');
+        loadingContainer.id = 'initialLoading';
+        loadingContainer.className = 'submission-loading';
+        loadingContainer.innerHTML = `
+            <div class="loading-content">
+                <div class="loading-spinner"></div>
+                <h2>📡 Cargando Base de Datos</h2>
+                <p>Obteniendo lista de colaboradores...</p>
+            </div>
+        `;
+        
+        document.body.appendChild(loadingContainer);
+    }
+    
+    loadingContainer.style.display = 'flex';
+    
+    // Deshabilitar campo de búsqueda como fallback
+    const searchInput = elements.searchInput;
     if (searchInput) {
         searchInput.disabled = true;
         searchInput.placeholder = '⏳ Cargando colaboradores...';
@@ -457,27 +488,18 @@ function showInitialLoading() {
         searchInput.style.opacity = '0.6';
     }
     
-    // Mostrar mensaje de carga
-    if (message) {
-        message.innerHTML = '📡 Cargando base de datos de colaboradores...';
-        message.className = 'message info';
-        message.style.display = 'block';
-    }
-    
-    // Agregar clase de carga a la sección de búsqueda
-    if (searchSection) {
-        searchSection.classList.add('loading-state');
-    }
-    
     console.log('⏳ Estado de carga inicial activado');
 }
 
 function hideInitialLoading() {
-    const searchInput = elements.searchInput;
-    const searchSection = document.querySelector('.search-section');
-    const message = elements.message;
+    // Ocultar popup de carga
+    const loadingContainer = document.getElementById('initialLoading');
+    if (loadingContainer) {
+        loadingContainer.style.display = 'none';
+    }
     
     // Habilitar campo de búsqueda
+    const searchInput = elements.searchInput;
     if (searchInput) {
         searchInput.disabled = false;
         searchInput.placeholder = 'Ingresa nombre o legajo del colaborador';
@@ -486,39 +508,53 @@ function hideInitialLoading() {
         searchInput.focus(); // Hacer foco para mejor UX
     }
     
-    // Ocultar mensaje de carga después de un momento
-    if (message) {
-        setTimeout(() => {
-            message.style.display = 'none';
-        }, 2000);
-    }
-    
-    // Remover clase de carga
-    if (searchSection) {
-        searchSection.classList.remove('loading-state');
-    }
-    
     console.log('✅ Estado de carga inicial completado');
 }
 
 function showLoadingError() {
-    const searchInput = elements.searchInput;
-    const message = elements.message;
-    
-    // Mantener campo deshabilitado
-    if (searchInput) {
-        searchInput.disabled = true;
-        searchInput.placeholder = '❌ Error cargando datos';
-        searchInput.style.cursor = 'not-allowed';
-        searchInput.style.opacity = '0.6';
+    // Ocultar popup de carga
+    const loadingContainer = document.getElementById('initialLoading');
+    if (loadingContainer) {
+        loadingContainer.style.display = 'none';
     }
     
-    // Mostrar mensaje de error
-    if (message) {
-        message.innerHTML = '❌ Error cargando colaboradores. Recarga la página para intentar nuevamente.';
-        message.className = 'message error';
-        message.style.display = 'block';
+    // Crear popup de error de carga
+    let errorContainer = document.getElementById('loadingError');
+    
+    if (!errorContainer) {
+        errorContainer = document.createElement('div');
+        errorContainer.id = 'loadingError';
+        errorContainer.className = 'error-confirmation';
+        
+        document.body.appendChild(errorContainer);
     }
+    
+    errorContainer.innerHTML = `
+        <div class="error-content">
+            <div class="error-icon">❌</div>
+            <h2>Error de Conexión</h2>
+            <div class="error-details">
+                <p>No se pudo cargar la base de datos de colaboradores</p>
+                <p class="error-time">Intento fallido el ${new Date().toLocaleDateString('es-AR')} a las ${new Date().toLocaleTimeString('es-AR')}</p>
+            </div>
+            <div class="error-actions">
+                <button id="reloadBtn" class="btn btn-primary">
+                    🔄 Recargar Página
+                </button>
+                <button id="closePageBtn" class="btn btn-secondary">
+                    🚪 Cerrar Aplicación
+                </button>
+            </div>
+        </div>
+    `;
+    
+    errorContainer.style.display = 'flex';
+    
+    // Agregar event listeners
+    document.getElementById('reloadBtn').addEventListener('click', () => {
+        window.location.reload();
+    });
+    document.getElementById('closePageBtn').addEventListener('click', closePage);
     
     console.log('❌ Error en carga inicial');
 }
