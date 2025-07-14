@@ -381,12 +381,27 @@ function selectColaborador(colaborador) {
         return;
     }
     
+    console.log('Elemento selectedSection encontrado:', elements.selectedSection);
+    console.log('Display actual antes del cambio:', elements.selectedSection.style.display);
+    console.log('Computed style antes del cambio:', getComputedStyle(elements.selectedSection).display);
+    
     // Mostrar información del colaborador seleccionado
     elements.selectedName.textContent = colaborador.nombreCompleto;
     elements.selectedLegajo.textContent = `Legajo: ${colaborador.legajo}`;
     
-    // Mostrar sección de registro
+    // Mostrar sección de registro con múltiples intentos
     elements.selectedSection.style.display = 'block';
+    elements.selectedSection.style.visibility = 'visible';
+    elements.selectedSection.style.opacity = '1';
+    
+    console.log('Display después del cambio:', elements.selectedSection.style.display);
+    console.log('Computed style después del cambio:', getComputedStyle(elements.selectedSection).display);
+    console.log('Visibility después del cambio:', elements.selectedSection.style.visibility);
+    console.log('Opacity después del cambio:', elements.selectedSection.style.opacity);
+    
+    // Verificar si el elemento es visible
+    const rect = elements.selectedSection.getBoundingClientRect();
+    console.log('Dimensiones del elemento:', rect);
     
     // Limpiar y ocultar resultados de búsqueda
     elements.searchInput.value = '';
