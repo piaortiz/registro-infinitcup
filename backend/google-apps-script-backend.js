@@ -191,23 +191,17 @@ function doGet(e) {
       console.log('Verificando registro específico para:', e.parameter.collaboratorId);
       
       const collaboratorId = e.parameter.collaboratorId;
-      const fecha = e.parameter.fecha;
-      const hora = e.parameter.hora;
-      const lugar = e.parameter.lugar;
+      const callback = e.parameter.callback;
       
       const registroSheet = SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName(SHEET_NAME);
       if (!registroSheet) {
         const result = {
           found: false,
           collaboratorId: collaboratorId,
-          fecha: fecha,
-          hora: hora,
-          lugar: lugar,
           error: 'Hoja de registros no encontrada',
           timestamp: new Date().toISOString()
         };
         
-        const callback = e.parameter.callback;
         if (callback) {
           const jsonpResponse = callback + '(' + JSON.stringify(result) + ');';
           return ContentService
@@ -221,26 +215,18 @@ function doGet(e) {
       
       const registros = registroSheet.getDataRange().getValues();
       
-      // Buscar el registro específico (últimas 50 filas para optimizar)
-      // Columnas: [0]Legajo, [1]Nombre, [2]Fecha, [3]Hora, [4]Lugar, [5]Cantidad, [6]Detalle, [7]FechaRegistro, [8]Estado
-      const recentRegistros = registros.slice(-50);
-      const found = recentRegistros.some(row => 
-        row[0] == collaboratorId && 
-        row[2] == fecha && 
-        row[3] == hora && 
-        row[4] == lugar
+      // Buscar el registro específico en el nuevo formato
+      // Columnas: [0]Timestamp, [1]Legajo, [2]NombreCompleto, [3]Confirmado, [4]InvitadoNombre, [5]InvitadoVinculo
+      const found = registros.some(row => 
+        row[1] == collaboratorId // Buscar en columna Legajo
       );
       
       const result = {
         found: found,
         collaboratorId: collaboratorId,
-        fecha: fecha,
-        hora: hora,
-        lugar: lugar,
         timestamp: new Date().toISOString()
       };
       
-      const callback = e.parameter.callback;
       if (callback) {
         // Respuesta JSONP
         const jsonpResponse = callback + '(' + JSON.stringify(result) + ');';
@@ -441,9 +427,9 @@ function isAlreadyRegistered(legajo) {
     
     const data = sheet.getDataRange().getValues();
     
-    // Buscar en la columna de legajos
+    // Buscar en la columna de legajos (ahora columna 1, índice 1)
     for (let i = 1; i < data.length; i++) {
-      if (data[i][0].toString() === legajo.toString()) {
+      if (data[i][1].toString() === legajo.toString()) {
         return true;
       }
     }
@@ -470,35 +456,39 @@ function registerAttendance(data) {
       sheet = createRegistrationSheet();
     }
     
-    // Preparar datos para insertar
+    // Preparar timestamp
     const timestamp = new Date();
-    const invitadosText = data.invitados && data.invitados.length > 0 ? 
-      data.invitados.map(inv => `${inv.nombre} (${inv.vinculo})`).join(', ') : 
-      'Sin invitados';
     
-    const rowData = [
-      data.legajo,
-      data.nombreCompleto,
-      data.fecha || timestamp.toISOString().split('T')[0], // Usar fecha actual si no se proporciona
-      data.hora || timestamp.toTimeString().split(' ')[0], // Usar hora actual si no se proporciona  
-      data.lugar || 'Evento de Empresa',
-      data.cantidadInvitados || 0,
-      invitadosText,
-      timestamp,
-      'Confirmado'
+    // PRIMERA FILA: Registro del colaborador principal
+    const mainRowData = [
+      timestamp,                    // Timestamp
+      data.legajo,                 // Legajo
+      data.nombreCompleto,         // NombreCompleto
+      'Sí',                        // Confirmado
+      '',                          // InvitadoNombre (vacío para el colaborador)
+      ''                           // InvitadoVinculo (vacío para el colaborador)
     ];
     
-    console.log('📝 Insertando fila:', rowData);
+    console.log('📝 Insertando fila del colaborador:', mainRowData);
+    sheet.appendRow(mainRowData);
     
-    // Insertar nueva fila
-    sheet.appendRow(rowData);
-    
-    console.log('✅ Fila insertada exitosamente');
-    
-    // También podemos guardar los invitados en una hoja separada si es necesario
+    // FILAS ADICIONALES: Una fila por cada invitado
     if (data.invitados && data.invitados.length > 0) {
-      console.log('👥 Guardando invitados en hoja separada...');
-      saveGuests(data.legajo, data.invitados);
+      console.log('👥 Guardando invitados, cantidad:', data.invitados.length);
+      
+      data.invitados.forEach((invitado, index) => {
+        const guestRowData = [
+          timestamp,                 // Timestamp
+          data.legajo,              // Legajo (mismo que el colaborador)
+          data.nombreCompleto,      // NombreCompleto (mismo que el colaborador)
+          'Sí',                     // Confirmado
+          invitado.nombre,          // InvitadoNombre
+          invitado.vinculo          // InvitadoVinculo
+        ];
+        
+        console.log(`� Insertando fila del invitado ${index + 1}:`, guestRowData);
+        sheet.appendRow(guestRowData);
+      });
     }
     
     console.log('✅ registerAttendance completado exitosamente');
@@ -518,17 +508,14 @@ function createRegistrationSheet() {
     const spreadsheet = SpreadsheetApp.openById(SPREADSHEET_ID);
     const sheet = spreadsheet.insertSheet(SHEET_NAME);
     
-    // Configurar headers
+    // Configurar headers según el formato requerido
     const headers = [
+      'Timestamp',
       'Legajo',
-      'Nombre Completo',
-      'Fecha',
-      'Hora',
-      'Lugar',
-      'Cantidad Invitados',
-      'Detalle Invitados',
-      'Fecha Registro',
-      'Estado'
+      'NombreCompleto',
+      'Confirmado',
+      'InvitadoNombre',
+      'InvitadoVinculo'
     ];
     
     sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
@@ -540,73 +527,18 @@ function createRegistrationSheet() {
     headerRange.setFontColor('white');
     
     // Ajustar anchos de columnas
-    sheet.setColumnWidth(1, 80);  // Legajo
-    sheet.setColumnWidth(2, 200); // Nombre
-    sheet.setColumnWidth(3, 100); // Fecha
-    sheet.setColumnWidth(4, 100); // Hora
-    sheet.setColumnWidth(5, 150); // Lugar
-    sheet.setColumnWidth(6, 80);  // Cantidad
-    sheet.setColumnWidth(7, 300); // Detalle
-    sheet.setColumnWidth(8, 150); // Fecha Registro
-    sheet.setColumnWidth(9, 100); // Estado
+    sheet.setColumnWidth(1, 150); // Timestamp
+    sheet.setColumnWidth(2, 80);  // Legajo
+    sheet.setColumnWidth(3, 200); // NombreCompleto
+    sheet.setColumnWidth(4, 100); // Confirmado
+    sheet.setColumnWidth(5, 150); // InvitadoNombre
+    sheet.setColumnWidth(6, 120); // InvitadoVinculo
     
     return sheet;
     
   } catch (error) {
     console.error('Error creando hoja de registros:', error);
     throw error;
-  }
-}
-
-/**
- * Guarda los invitados en una hoja separada (opcional)
- */
-function saveGuests(legajo, invitados) {
-  try {
-    const sheetName = 'Invitados';
-    const spreadsheet = SpreadsheetApp.openById(SPREADSHEET_ID);
-    let sheet = spreadsheet.getSheetByName(sheetName);
-    
-    // Crear hoja si no existe
-    if (!sheet) {
-      sheet = spreadsheet.insertSheet(sheetName);
-      const headers = ['Legajo Colaborador', 'Nombre Colaborador', 'Nombre Invitado', 'Vínculo', 'Fecha Registro'];
-      sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
-      
-      // Formato de headers
-      const headerRange = sheet.getRange(1, 1, 1, headers.length);
-      headerRange.setFontWeight('bold');
-      headerRange.setBackground('#34a853');
-      headerRange.setFontColor('white');
-    }
-    
-    // Obtener nombre del colaborador
-    const colaboradorSheet = spreadsheet.getSheetByName(COLABORADORES_SHEET);
-    const colaboradorData = colaboradorSheet.getDataRange().getValues();
-    let nombreColaborador = '';
-    
-    for (let i = 1; i < colaboradorData.length; i++) {
-      if (colaboradorData[i][0].toString() === legajo.toString()) {
-        nombreColaborador = colaboradorData[i][1]; // Asumiendo que el nombre está en columna B
-        break;
-      }
-    }
-    
-    // Insertar cada invitado
-    const timestamp = new Date();
-    invitados.forEach(invitado => {
-      const rowData = [
-        legajo,
-        nombreColaborador,
-        invitado.nombre,
-        invitado.vinculo,
-        timestamp
-      ];
-      sheet.appendRow(rowData);
-    });
-    
-  } catch (error) {
-    console.error('Error guardando invitados:', error);
   }
 }
 
@@ -645,15 +577,26 @@ function getStats() {
     if (!sheet) return { registros: 0, invitados: 0 };
     
     const data = sheet.getDataRange().getValues();
-    const registros = data.length - 1; // Excluir header
     
+    // Contar colaboradores únicos y total de invitados
+    const colaboradoresUnicos = new Set();
     let totalInvitados = 0;
+    
     for (let i = 1; i < data.length; i++) {
-      totalInvitados += parseInt(data[i][5]) || 0; // Columna cantidad invitados (ahora columna 5)
+      const legajo = data[i][1]; // Columna Legajo
+      const invitadoNombre = data[i][4]; // Columna InvitadoNombre
+      
+      // Agregar colaborador único
+      colaboradoresUnicos.add(legajo);
+      
+      // Contar invitados (filas que tienen nombre de invitado)
+      if (invitadoNombre && invitadoNombre.trim() !== '') {
+        totalInvitados++;
+      }
     }
     
     return {
-      registros: registros,
+      registros: colaboradoresUnicos.size,
       invitados: totalInvitados
     };
     
