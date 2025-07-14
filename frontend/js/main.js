@@ -391,10 +391,16 @@ function selectColaborador(colaborador) {
         searchSection.style.display = 'none';
     }
     
-    // Mostrar sección de registro
+    // Forzar la visualización de la sección seleccionada
     elements.selectedSection.style.display = 'block';
     elements.selectedSection.style.visibility = 'visible';
     elements.selectedSection.style.opacity = '1';
+    elements.selectedSection.style.position = 'relative';
+    elements.selectedSection.style.zIndex = '10';
+    elements.selectedSection.classList.add('active');
+    
+    // Forzar el reflow del DOM
+    elements.selectedSection.offsetHeight;
     
     // Limpiar y ocultar resultados de búsqueda
     elements.searchInput.value = '';
@@ -406,13 +412,26 @@ function selectColaborador(colaborador) {
     // Ocultar mensajes anteriores
     hideMessage();
     
-    // Hacer scroll al elemento para asegurar que sea visible
+    // Hacer scroll al elemento - con mayor delay para asegurar renderizado
     setTimeout(() => {
-        elements.selectedSection.scrollIntoView({ 
-            behavior: 'smooth', 
-            block: 'start' 
-        });
-    }, 100);
+        // Verificar que el elemento sea visible
+        const rect = elements.selectedSection.getBoundingClientRect();
+        console.log('Dimensiones después del delay:', rect);
+        
+        if (rect.height > 0) {
+            elements.selectedSection.scrollIntoView({ 
+                behavior: 'smooth', 
+                block: 'start' 
+            });
+        } else {
+            console.warn('El elemento selectedSection no tiene altura visible');
+            // Forzar scroll al contenedor
+            document.querySelector('.content').scrollIntoView({ 
+                behavior: 'smooth', 
+                block: 'start' 
+            });
+        }
+    }, 200);
     
     console.log('Colaborador seleccionado correctamente:', colaborador);
 }
@@ -826,6 +845,7 @@ function handleCancel() {
     
     // Ocultar sección de registro
     elements.selectedSection.style.display = 'none';
+    elements.selectedSection.classList.remove('active');
     
     // Mostrar sección de búsqueda
     const searchSection = document.querySelector('.search-section');

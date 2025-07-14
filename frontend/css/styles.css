@@ -186,12 +186,23 @@ body {
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
     position: relative;
     z-index: 1;
+    width: 100%;
+    min-height: 200px;
 }
 
 .selected-section[style*="display: block"] {
     display: block !important;
     visibility: visible !important;
     opacity: 1 !important;
+}
+
+/* Fuerza la visualización cuando está activa */
+.selected-section.active {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    position: relative !important;
+    z-index: 10 !important;
 }
 
 .selected-header {
