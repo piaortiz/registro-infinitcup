@@ -618,9 +618,6 @@ function showSuccessConfirmation(collaboratorName, guestCount) {
                 <button id="closePageBtn" class="btn btn-primary">
                     🚪 Cerrar Aplicación
                 </button>
-                <button id="newRegistrationBtn" class="btn btn-secondary">
-                    ➕ Nuevo Registro
-                </button>
             </div>
         </div>
     `;
@@ -629,7 +626,6 @@ function showSuccessConfirmation(collaboratorName, guestCount) {
     
     // Agregar event listeners
     document.getElementById('closePageBtn').addEventListener('click', closePage);
-    document.getElementById('newRegistrationBtn').addEventListener('click', startNewRegistration);
     
     console.log('🎉 Mostrando confirmación de éxito');
 }
@@ -689,22 +685,6 @@ function closePage() {
     }, 500);
     
     console.log('🚪 Cerrando aplicación');
-}
-
-function startNewRegistration() {
-    // Limpiar todos los contenedores de confirmación
-    const containers = ['submissionLoading', 'successConfirmation', 'errorConfirmation'];
-    containers.forEach(id => {
-        const container = document.getElementById(id);
-        if (container) {
-            container.style.display = 'none';
-        }
-    });
-    
-    // Restaurar pantalla inicial
-    restoreInitialScreen();
-    
-    console.log('➕ Iniciando nuevo registro');
 }
 
 function restoreForm() {
