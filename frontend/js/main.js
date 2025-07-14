@@ -39,21 +39,35 @@ function setSelectedColaborador(newValue, location) {
  * Inicializa la aplicación cuando el DOM está cargado
  */
 document.addEventListener('DOMContentLoaded', async function() {
+    console.log('🔄 Iniciando aplicación...');
+    
     // Obtener referencias a elementos del DOM
     initializeElements();
+    
+    // Mostrar estado de carga inicial
+    showInitialLoading();
     
     // Configurar event listeners
     setupEventListeners();
     
-    // Cargar datos de colaboradores
-    await loadColaboradores();
-    
-    // Inicializar Fuse.js para búsqueda
-    initializeFuse();
-    
-    console.log('✅ Aplicación inicializada correctamente - Versión:', CONFIG.version);
-    console.log('📌 Método de envío: JSONP (NO iframe)');
-    console.log('📌 Si aparece "iframe" en los logs, hay un problema de caché');
+    try {
+        // Cargar datos de colaboradores
+        await loadColaboradores();
+        
+        // Inicializar Fuse.js para búsqueda
+        initializeFuse();
+        
+        // Habilitar búsqueda una vez cargados los datos
+        enableSearch();
+        
+        console.log('✅ Aplicación inicializada correctamente - Versión:', CONFIG.version);
+        console.log('📌 Método de envío: JSONP (NO iframe)');
+        console.log('📌 Si aparece "iframe" en los logs, hay un problema de caché');
+        
+    } catch (error) {
+        console.error('❌ Error al inicializar aplicación:', error);
+        showLoadingError();
+    }
 });
 
 /**
@@ -153,9 +167,6 @@ function hideSearchHint() {
  */
 async function loadColaboradores() {
     try {
-        showLoading(true);
-        
-        // Cargar colaboradores desde Google Apps Script
         console.log('Cargando colaboradores desde Google Apps Script...');
         
         // Usar JSONP para evitar problemas de CORS
@@ -181,16 +192,10 @@ async function loadColaboradores() {
             throw new Error('No se encontraron colaboradores en Google Apps Script');
         }
         
-        showMessage(`✅ Cargados ${colaboradores.length} colaboradores desde Google Sheets`, 'success');
-        
     } catch (error) {
         console.error('❌ Error al cargar colaboradores desde Google Apps Script:', error);
         colaboradores = []; // Array vacío para ver claramente el error
-        showMessage(`❌ Error al cargar colaboradores: ${error.message}`, 'error');
-        throw error; // Re-lanzar el error para que se vea claramente
-        
-    } finally {
-        showLoading(false);
+        throw error; // Re-lanzar el error para que se maneje en el nivel superior
     }
 }
 
@@ -239,6 +244,13 @@ function initializeFuse() {
  */
 function handleSearch(event) {
     const query = event.target.value.trim();
+    
+    // Verificar si los colaboradores están cargados
+    if (!colaboradores || colaboradores.length === 0) {
+        console.log('⚠️ Búsqueda cancelada: colaboradores no cargados');
+        hideSearchResults();
+        return;
+    }
     
     // Cancelar búsqueda anterior
     if (searchTimeout) {
@@ -1345,4 +1357,81 @@ function verifyRegistrationSaved(collaboratorId, fecha, hora, lugar) {
             }
         }, 10000);
     });
+}
+
+/**
+ * Muestra el estado de carga inicial
+ */
+function showInitialLoading() {
+    console.log('🔄 Mostrando estado de carga inicial...');
+    
+    // Deshabilitar el campo de búsqueda
+    if (elements.searchInput) {
+        elements.searchInput.disabled = true;
+        elements.searchInput.placeholder = 'Cargando empleados...';
+        elements.searchInput.style.backgroundColor = '#f8f9fa';
+        elements.searchInput.style.cursor = 'not-allowed';
+    }
+    
+    // Mostrar mensaje de carga
+    showMessage('🔄 Cargando lista de empleados desde Google Sheets...', 'info');
+    
+    // Mostrar indicador de carga
+    showLoading(true);
+    
+    // Ocultar hint de búsqueda
+    hideSearchHint();
+}
+
+/**
+ * Habilita la búsqueda después de cargar los datos
+ */
+function enableSearch() {
+    console.log('✅ Habilitando búsqueda...');
+    
+    // Habilitar el campo de búsqueda
+    if (elements.searchInput) {
+        elements.searchInput.disabled = false;
+        elements.searchInput.placeholder = 'Buscar por nombre o legajo...';
+        elements.searchInput.style.backgroundColor = '';
+        elements.searchInput.style.cursor = '';
+    }
+    
+    // Ocultar indicador de carga
+    showLoading(false);
+    
+    // Mostrar mensaje de éxito
+    showMessage(`✅ Sistema listo. ${colaboradores.length} empleados cargados correctamente.`, 'success');
+    
+    // Auto-ocultar mensaje después de 3 segundos
+    setTimeout(() => {
+        hideMessage();
+    }, 3000);
+    
+    // Hacer foco en el campo de búsqueda
+    setTimeout(() => {
+        if (elements.searchInput) {
+            elements.searchInput.focus();
+        }
+    }, 500);
+}
+
+/**
+ * Muestra error en la carga inicial
+ */
+function showLoadingError() {
+    console.log('❌ Mostrando error de carga...');
+    
+    // Mantener el campo deshabilitado
+    if (elements.searchInput) {
+        elements.searchInput.disabled = true;
+        elements.searchInput.placeholder = 'Error al cargar empleados';
+        elements.searchInput.style.backgroundColor = '#ffe6e6';
+    }
+    
+    // Ocultar indicador de carga
+    showLoading(false);
+    
+    // Mostrar mensaje de error persistente
+    showMessage('❌ Error al cargar la lista de empleados. Verifique su conexión a internet y recargue la página.', 'error');
 }
