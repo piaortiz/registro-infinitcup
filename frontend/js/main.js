@@ -915,17 +915,9 @@ function showErrorConfirmation(errorMessage) {
 }
 
 function closePage() {
-    // Intentar cerrar la ventana/tab
-    if (window.close) {
-        window.close();
-    }
-    
-    // Fallback: redirigir o mostrar mensaje
-    setTimeout(() => {
-        window.location.href = 'about:blank';
-    }, 500);
-    
-    console.log('🚪 Cerrando aplicación');
+    // Redirigir a Google
+    console.log('🚪 Cerrando aplicación - Redirigiendo a Google');
+    window.location.href = 'https://www.google.com';
 }
 
 function restoreForm() {
