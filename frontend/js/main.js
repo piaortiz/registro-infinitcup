@@ -698,6 +698,22 @@ async function handleSubmit(event) {
             showMessage('❌ Error de permisos en Google Apps Script. Contacte al administrador del sistema.', 'error');
             console.error('❌ Error 403: Permisos insuficientes');
             return; // No limpiar el formulario
+        } else if (response.error === 'GOOGLE_SCRIPT_NOT_PROCESSING_REGISTER') {
+            showMessage('❌ Error en Google Apps Script: El script no está procesando el registro correctamente. El parámetro action=register no funciona. Contacte al administrador.', 'error');
+            console.error('❌ Error: Google Apps Script no procesa action=register');
+            return; // No limpiar el formulario
+        } else if (response.error === 'WRONG_RESPONSE_TYPE') {
+            showMessage('❌ Error en Google Apps Script: El servidor devolvió una respuesta incorrecta. Contacte al administrador.', 'error');
+            console.error('❌ Error: Respuesta incorrecta del servidor');
+            return; // No limpiar el formulario
+        } else if (response.error === 'UNKNOWN_RESPONSE') {
+            showMessage('❌ Error: Respuesta desconocida del servidor. El registro posiblemente no se guardó. Contacte al administrador.', 'error');
+            console.error('❌ Error: Respuesta desconocida');
+            return; // No limpiar el formulario
+        } else if (response.error === 'TIMEOUT') {
+            showMessage('❌ Error: El servidor tardó demasiado en responder. Intente nuevamente.', 'error');
+            console.error('❌ Error: Timeout');
+            return; // No limpiar el formulario
         } else if (response.confirmed === true) {
             showMessage('✅ Registro guardado exitosamente en Google Sheets', 'success');
             console.log('✅ Registro exitoso');
@@ -819,14 +835,46 @@ async function sendRegistration(data) {
         // Definir callback global
         window[callbackName] = (response) => {
             console.log('✅ Respuesta del servidor:', response);
+            console.log('🔍 Analizando respuesta...');
+            console.log('🔍 response.status:', response.status);
+            console.log('🔍 response.message:', response.message);
+            console.log('🔍 response.colaboradores:', response.colaboradores ? 'SÍ TIENE' : 'NO TIENE');
+            
             cleanup();
             
-            if (response.status === 'SUCCESS' || response.status === 'success') {
+            // PROBLEMA DETECTADO: Si la respuesta tiene "colaboradores", significa que
+            // el Google Apps Script no procesó el action=register correctamente
+            if (response.colaboradores && response.colaboradores.length > 0) {
+                console.error('❌ PROBLEMA: El Google Apps Script devolvió colaboradores en lugar de procesar el registro');
+                console.error('❌ Esto significa que el parámetro action=register no se está procesando correctamente');
+                console.error('❌ El script está ejecutando la acción por defecto (obtener colaboradores)');
+                
                 resolve({
-                    status: 'SUCCESS',
-                    message: response.message || 'Registro guardado exitosamente',
-                    confirmed: true
+                    status: 'ERROR',
+                    message: 'Error en Google Apps Script: No se procesó el registro correctamente. El script devolvió colaboradores en lugar de procesar el registro.',
+                    confirmed: false,
+                    error: 'GOOGLE_SCRIPT_NOT_PROCESSING_REGISTER'
                 });
+                return;
+            }
+            
+            // Verificar si es una respuesta de registro exitoso
+            if (response.status === 'SUCCESS' || response.status === 'success') {
+                if (response.message && response.message.includes('Colaboradores obtenidos')) {
+                    console.error('❌ PROBLEMA: Respuesta de éxito pero con mensaje de colaboradores');
+                    resolve({
+                        status: 'ERROR',
+                        message: 'Error en Google Apps Script: Respuesta incorrecta del servidor',
+                        confirmed: false,
+                        error: 'WRONG_RESPONSE_TYPE'
+                    });
+                } else {
+                    resolve({
+                        status: 'SUCCESS',
+                        message: response.message || 'Registro guardado exitosamente',
+                        confirmed: true
+                    });
+                }
             } else if (response.status === 'ERROR' || response.status === 'error') {
                 resolve({
                     status: 'ERROR',
@@ -834,10 +882,13 @@ async function sendRegistration(data) {
                     confirmed: false
                 });
             } else {
+                // Respuesta desconocida
+                console.warn('⚠️ Respuesta desconocida del servidor:', response);
                 resolve({
-                    status: 'SUCCESS',
-                    message: 'Registro enviado correctamente',
-                    confirmed: true
+                    status: 'ERROR',
+                    message: 'Respuesta desconocida del servidor. Posiblemente el registro no se guardó.',
+                    confirmed: false,
+                    error: 'UNKNOWN_RESPONSE'
                 });
             }
         };
@@ -848,16 +899,18 @@ async function sendRegistration(data) {
                 console.log('⚠️ Timeout en envío de registro');
                 cleanup();
                 resolve({
-                    status: 'SUCCESS',
-                    message: 'Registro enviado (timeout en verificación)',
-                    warning: true
+                    status: 'ERROR',
+                    message: 'Timeout: El servidor tardó demasiado en responder',
+                    confirmed: false,
+                    error: 'TIMEOUT'
                 });
             }
         }, 15000);
         
-        // Crear URL para JSONP
+        // Crear URL para JSONP con método POST simulado
         const params = new URLSearchParams({
             callback: callbackName,
+            method: 'POST',  // Agregar método explícito
             action: 'register',
             legajo: data.legajo,
             nombreCompleto: data.nombreCompleto,
@@ -871,6 +924,11 @@ async function sendRegistration(data) {
         
         const url = `${CONFIG.apiUrl}?${params.toString()}`;
         console.log('🔄 URL de envío:', url);
+        console.log('🔄 Parámetros importantes:');
+        console.log('   - action:', 'register');
+        console.log('   - method:', 'POST');
+        console.log('   - legajo:', data.legajo);
+        console.log('   - nombreCompleto:', data.nombreCompleto);
         
         // Crear script tag
         const script = document.createElement('script');
