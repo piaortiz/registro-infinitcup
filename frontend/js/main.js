@@ -484,8 +484,28 @@ function selectColaborador(colaborador) {
                 </div>
             `;
             
-            // Reconfigurar event listeners
-            setupEventListeners();
+            // Reconfigurar elementos después del fallback
+            elements.registrationForm = document.getElementById('registrationForm');
+            elements.guestCount = document.getElementById('guestCount');
+            elements.guestsSection = document.getElementById('guestsSection');
+            elements.submitBtn = document.querySelector('button[type="submit"]');
+            elements.cancelBtn = document.querySelector('button[type="button"]');
+            
+            // Reconfigurar event listeners específicos
+            if (elements.registrationForm) {
+                elements.registrationForm.addEventListener('submit', handleSubmit);
+            }
+            
+            if (elements.guestCount) {
+                elements.guestCount.addEventListener('input', handleGuestCountChange);
+            }
+            
+            if (elements.cancelBtn) {
+                elements.cancelBtn.addEventListener('click', handleCancel);
+            }
+            
+            // Asegurar que selectedColaborador se mantenga
+            console.log('Fallback ejecutado, selectedColaborador:', selectedColaborador);
         }
     }
     
@@ -587,7 +607,10 @@ function generateGuestFields(count) {
 async function handleSubmit(event) {
     event.preventDefault();
     
+    console.log('handleSubmit ejecutado, selectedColaborador:', selectedColaborador);
+    
     if (!selectedColaborador) {
+        console.error('selectedColaborador es null o undefined');
         showMessage('Por favor seleccione un colaborador', 'error');
         return;
     }
