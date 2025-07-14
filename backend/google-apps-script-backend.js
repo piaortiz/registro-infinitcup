@@ -465,8 +465,8 @@ function registerAttendance(data) {
       data.legajo,                 // Legajo
       data.nombreCompleto,         // NombreCompleto
       'Sí',                        // Confirmado
-      '',                          // InvitadoNombre (vacío para el colaborador)
-      ''                           // InvitadoVinculo (vacío para el colaborador)
+      data.nombreCompleto,         // InvitadoNombre (nombre del colaborador para sorteo)
+      'Colaborador'                // InvitadoVinculo (identificar que es el colaborador)
     ];
     
     console.log('📝 Insertando fila del colaborador:', mainRowData);
