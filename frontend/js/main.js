@@ -36,21 +36,30 @@ document.addEventListener('DOMContentLoaded', async function() {
     };
     
     // Cargar colaboradores
-    await loadColaboradores();
-    
-    // Event listeners
-    setupEventListeners();
+    try {
+        await loadColaboradores();
+        
+        // Solo continuar si la carga fue exitosa
+        // Event listeners
+        setupEventListeners();
+        
+        console.log('✅ Aplicación inicializada correctamente');
+    } catch (error) {
+        console.error('❌ Error inicializando aplicación:', error);
+        // No continuar con la inicialización si hay error
+        return;
+    }
     
     // Inicializar tema
     initializeTheme();
-    
-    console.log('✅ Aplicación inicializada correctamente');
 });
 
 // Cargar colaboradores
 async function loadColaboradores() {
     try {
         console.log('📥 Cargando colaboradores...');
+        showInitialLoading();
+        
         const response = await fetchWithJSONP(CONFIG.apiUrl);
         
         if (response.colaboradores && Array.isArray(response.colaboradores)) {
@@ -63,9 +72,12 @@ async function loadColaboradores() {
         
         console.log(`✅ Cargados ${colaboradores.length} colaboradores`);
         showMessage(`✅ Cargados ${colaboradores.length} colaboradores`, 'success');
+        hideInitialLoading();
+        
     } catch (error) {
         console.error('❌ Error cargando colaboradores:', error);
-        showMessage('❌ Error cargando colaboradores', 'error');
+        showLoadingError();
+        throw error; // Re-lanzar el error para que se maneje en la inicialización
     }
 }
 
@@ -433,6 +445,86 @@ function toggleTheme() {
             themeToggle.style.transform = 'scale(1)';
         }, 150);
     }
+}
+
+// Loading state management
+function showInitialLoading() {
+    const searchInput = elements.searchInput;
+    const searchSection = document.querySelector('.search-section');
+    const message = elements.message;
+    
+    // Deshabilitar campo de búsqueda
+    if (searchInput) {
+        searchInput.disabled = true;
+        searchInput.placeholder = '⏳ Cargando colaboradores...';
+        searchInput.style.cursor = 'not-allowed';
+        searchInput.style.opacity = '0.6';
+    }
+    
+    // Mostrar mensaje de carga
+    if (message) {
+        message.innerHTML = '📡 Cargando base de datos de colaboradores...';
+        message.className = 'message info';
+        message.style.display = 'block';
+    }
+    
+    // Agregar clase de carga a la sección de búsqueda
+    if (searchSection) {
+        searchSection.classList.add('loading-state');
+    }
+    
+    console.log('⏳ Estado de carga inicial activado');
+}
+
+function hideInitialLoading() {
+    const searchInput = elements.searchInput;
+    const searchSection = document.querySelector('.search-section');
+    const message = elements.message;
+    
+    // Habilitar campo de búsqueda
+    if (searchInput) {
+        searchInput.disabled = false;
+        searchInput.placeholder = 'Ingresa nombre o legajo del colaborador';
+        searchInput.style.cursor = 'text';
+        searchInput.style.opacity = '1';
+        searchInput.focus(); // Hacer foco para mejor UX
+    }
+    
+    // Ocultar mensaje de carga después de un momento
+    if (message) {
+        setTimeout(() => {
+            message.style.display = 'none';
+        }, 2000);
+    }
+    
+    // Remover clase de carga
+    if (searchSection) {
+        searchSection.classList.remove('loading-state');
+    }
+    
+    console.log('✅ Estado de carga inicial completado');
+}
+
+function showLoadingError() {
+    const searchInput = elements.searchInput;
+    const message = elements.message;
+    
+    // Mantener campo deshabilitado
+    if (searchInput) {
+        searchInput.disabled = true;
+        searchInput.placeholder = '❌ Error cargando datos';
+        searchInput.style.cursor = 'not-allowed';
+        searchInput.style.opacity = '0.6';
+    }
+    
+    // Mostrar mensaje de error
+    if (message) {
+        message.innerHTML = '❌ Error cargando colaboradores. Recarga la página para intentar nuevamente.';
+        message.className = 'message error';
+        message.style.display = 'block';
+    }
+    
+    console.log('❌ Error en carga inicial');
 }
 
 console.log('📁 Archivo cargado - Versión:', CONFIG.version);
