@@ -41,6 +41,9 @@ document.addEventListener('DOMContentLoaded', async function() {
     // Event listeners
     setupEventListeners();
     
+    // Inicializar tema
+    initializeTheme();
+    
     console.log('✅ Aplicación inicializada correctamente');
 });
 
@@ -375,6 +378,61 @@ function resetForm() {
     elements.searchInput.value = '';
     elements.guestCount.value = '0';
     elements.guestsSection.innerHTML = '';
+}
+
+// Theme management
+function initializeTheme() {
+    // Check for saved theme preference or default to light mode
+    const savedTheme = localStorage.getItem('theme');
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    
+    const theme = savedTheme || (prefersDark ? 'dark' : 'light');
+    
+    setTheme(theme);
+    
+    // Add theme toggle event listener
+    const themeToggle = document.getElementById('themeToggle');
+    if (themeToggle) {
+        themeToggle.addEventListener('click', toggleTheme);
+    }
+    
+    // Listen for system theme changes
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+        if (!localStorage.getItem('theme')) {
+            setTheme(e.matches ? 'dark' : 'light');
+        }
+    });
+}
+
+function setTheme(theme) {
+    const body = document.body;
+    const themeToggle = document.getElementById('themeToggle');
+    
+    if (theme === 'dark') {
+        body.classList.add('dark-theme');
+        if (themeToggle) themeToggle.textContent = '☀️';
+        console.log('🌙 Modo oscuro activado');
+    } else {
+        body.classList.remove('dark-theme');
+        if (themeToggle) themeToggle.textContent = '🌙';
+        console.log('☀️ Modo claro activado');
+    }
+    
+    localStorage.setItem('theme', theme);
+}
+
+function toggleTheme() {
+    const isDark = document.body.classList.contains('dark-theme');
+    setTheme(isDark ? 'light' : 'dark');
+    
+    // Add a small animation feedback
+    const themeToggle = document.getElementById('themeToggle');
+    if (themeToggle) {
+        themeToggle.style.transform = 'scale(0.9)';
+        setTimeout(() => {
+            themeToggle.style.transform = 'scale(1)';
+        }, 150);
+    }
 }
 
 console.log('📁 Archivo cargado - Versión:', CONFIG.version);
