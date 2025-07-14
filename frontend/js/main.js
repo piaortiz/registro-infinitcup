@@ -15,6 +15,7 @@ const CONFIG = {
 let colaboradores = [];
 let selectedColaborador = null;
 let elements = {};
+let colaboradoresCache = null; // Cache para evitar recargas
 
 // Inicializar aplicación
 document.addEventListener('DOMContentLoaded', async function() {
@@ -54,12 +55,32 @@ document.addEventListener('DOMContentLoaded', async function() {
     initializeTheme();
 });
 
-// Cargar colaboradores
+// Cargar colaboradores con cache
 async function loadColaboradores() {
     try {
         console.log('📥 Cargando colaboradores...');
         showInitialLoading();
         
+        // Verificar cache primero
+        const cachedData = localStorage.getItem('colaboradores_cache');
+        const cacheTime = localStorage.getItem('colaboradores_cache_time');
+        const currentTime = new Date().getTime();
+        
+        // Cache válido por 5 minutos
+        if (cachedData && cacheTime && (currentTime - parseInt(cacheTime)) < 300000) {
+            console.log('🚀 Usando cache de colaboradores');
+            colaboradores = JSON.parse(cachedData);
+            
+            // Mostrar mensaje de carga rápida
+            setTimeout(() => {
+                hideInitialLoading();
+                showQuickLoadMessage();
+            }, 500);
+            
+            return;
+        }
+        
+        // Cargar desde servidor
         const response = await fetchWithJSONP(CONFIG.apiUrl);
         
         if (response.colaboradores && Array.isArray(response.colaboradores)) {
@@ -69,6 +90,10 @@ async function loadColaboradores() {
         } else {
             throw new Error('Formato de respuesta inválido');
         }
+        
+        // Guardar en cache
+        localStorage.setItem('colaboradores_cache', JSON.stringify(colaboradores));
+        localStorage.setItem('colaboradores_cache_time', currentTime.toString());
         
         console.log(`✅ Cargados ${colaboradores.length} colaboradores`);
         
@@ -82,21 +107,42 @@ async function loadColaboradores() {
                 
                 setTimeout(() => {
                     message.style.display = 'none';
-                }, 3000);
+                }, 2000); // Reducido de 3000 a 2000
             }
-        }, 500);
+        }, 300); // Reducido de 500 a 300
         
         hideInitialLoading();
         
     } catch (error) {
         console.error('❌ Error cargando colaboradores:', error);
         showLoadingError();
-        throw error; // Re-lanzar el error para que se maneje en la inicialización
+        throw error;
     }
 }
 
-// JSONP fetch
-function fetchWithJSONP(url, timeout = 30000) {
+// Función para limpiar cache (útil para debugging)
+function clearCache() {
+    localStorage.removeItem('colaboradores_cache');
+    localStorage.removeItem('colaboradores_cache_time');
+    console.log('🗑️ Cache limpiado');
+}
+
+// Función para mostrar carga rápida desde cache
+function showQuickLoadMessage() {
+    const message = elements.message;
+    if (message) {
+        message.innerHTML = `⚡ ${colaboradores.length} colaboradores cargados desde cache`;
+        message.className = 'message success';
+        message.style.display = 'block';
+        
+        setTimeout(() => {
+            message.style.display = 'none';
+        }, 2000);
+    }
+}
+
+// JSONP fetch optimizado
+function fetchWithJSONP(url, timeout = 12000) {
     return new Promise((resolve, reject) => {
         const callbackName = 'jsonp_callback_' + Date.now();
         
@@ -129,7 +175,14 @@ function fetchWithJSONP(url, timeout = 30000) {
 // Event listeners
 function setupEventListeners() {
     if (elements.searchInput) {
-        elements.searchInput.addEventListener('input', handleSearch);
+        // Usar debounce para optimizar búsqueda
+        let searchTimeout;
+        elements.searchInput.addEventListener('input', (event) => {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                handleSearch(event);
+            }, 200); // Esperar 200ms antes de buscar
+        });
     }
     
     if (elements.registrationForm) {
@@ -141,7 +194,7 @@ function setupEventListeners() {
     }
 }
 
-// Búsqueda simple
+// Búsqueda optimizada con índices
 function handleSearch(event) {
     const query = event.target.value.trim().toLowerCase();
     
@@ -151,10 +204,19 @@ function handleSearch(event) {
         return;
     }
     
-    const results = colaboradores.filter(col => 
-        col.nombreCompleto.toLowerCase().includes(query) ||
-        col.legajo.includes(query)
-    ).slice(0, 10);
+    // Búsqueda más eficiente usando algunos trucos
+    const results = [];
+    const maxResults = 8; // Reducido de 10 a 8
+    
+    for (let i = 0; i < colaboradores.length && results.length < maxResults; i++) {
+        const col = colaboradores[i];
+        const nombre = col.nombreCompleto.toLowerCase();
+        const legajo = col.legajo.toLowerCase();
+        
+        if (nombre.includes(query) || legajo.includes(query)) {
+            results.push(col);
+        }
+    }
     
     displayResults(results);
 }
@@ -358,7 +420,7 @@ async function sendRegistration(data) {
         
         document.head.appendChild(script);
         
-        // Timeout
+        // Timeout reducido para mejor UX
         setTimeout(() => {
             if (window[callbackName]) {
                 console.log('⏱️ Timeout en envío');
@@ -369,7 +431,7 @@ async function sendRegistration(data) {
                     warning: true
                 });
             }
-        }, 15000);
+        }, 10000); // Reducido de 15000 a 10000
     });
 }
 
@@ -447,13 +509,13 @@ function toggleTheme() {
     const isDark = document.body.classList.contains('dark-theme');
     setTheme(isDark ? 'light' : 'dark');
     
-    // Add a small animation feedback
+    // Animación más rápida
     const themeToggle = document.getElementById('themeToggle');
     if (themeToggle) {
         themeToggle.style.transform = 'scale(0.9)';
         setTimeout(() => {
             themeToggle.style.transform = 'scale(1)';
-        }, 150);
+        }, 100); // Reducido de 150 a 100
     }
 }
 

@@ -1,4 +1,4 @@
-/* Reset y estilos base */
+/* Reset y estilos base optimizados */
 * {
     margin: 0;
     padding: 0;
@@ -12,6 +12,10 @@ body {
     padding: 0;
     line-height: 1.6;
     color: #333;
+    /* Optimizaciones de rendimiento */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
 }
 
 /* Mejoras específicas para móviles */
