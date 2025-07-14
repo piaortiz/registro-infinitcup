@@ -690,22 +690,27 @@ async function handleSubmit(event) {
         console.log('✅ Respuesta de la API:', response);
         
         // Manejar respuesta con verificación
-        if (response.confirmed === true) {
+        if (response.error === '403_FORBIDDEN') {
+            showMessage('❌ Error de permisos en Google Apps Script. Contacte al administrador del sistema.', 'error');
+            console.error('❌ Error 403: Permisos insuficientes');
+            return; // No limpiar el formulario
+        } else if (response.confirmed === true) {
             showMessage('✅ Registro guardado exitosamente en Google Sheets', 'success');
-            // Limpiar formulario y ocultar sección
+            console.log('✅ Registro exitoso');
             resetForm();
             handleCancel();
         } else if (response.confirmed === false) {
             showMessage('❌ El registro no se guardó correctamente. Por favor, intente nuevamente.', 'error');
+            console.error('❌ Error al guardar registro');
             return; // No limpiar el formulario si falló
         } else if (response.warning) {
-            showMessage('⚠️ Registro enviado pero no se pudo verificar. Revise Google Sheets manualmente.', 'warning');
-            // Limpiar formulario y ocultar sección
+            showMessage('⚠️ Registro enviado. Si hay problemas, contacte al administrador.', 'warning');
+            console.log('⚠️ Registro enviado con advertencia');
             resetForm();
             handleCancel();
         } else {
             showMessage('✅ Registro enviado correctamente', 'success');
-            // Limpiar formulario y ocultar sección
+            console.log('✅ Registro enviado');
             resetForm();
             handleCancel();
         }
@@ -752,24 +757,20 @@ function prepareFormData() {
         }
     }
     
-    // Obtener datos del evento desde el formulario
-    const eventoInput = document.getElementById('evento');
-    const categoriaInput = document.getElementById('categoria');
-    const lugarInput = document.getElementById('lugar');
-    const fechaInput = document.getElementById('fecha');
-    const horaInput = document.getElementById('hora');
-    const observacionesInput = document.getElementById('observaciones');
+    // Datos simplificados - solo lo esencial
+    const currentDate = new Date();
+    const fecha = currentDate.toISOString().split('T')[0]; // YYYY-MM-DD
+    const hora = currentDate.toTimeString().split(' ')[0]; // HH:MM:SS
     
     const formData = {
         legajo: selectedColaborador.legajo,
         nombreCompleto: selectedColaborador.nombreCompleto,
+        cantidadInvitados: guestCount,
         invitados: invitados,
-        evento: eventoInput ? eventoInput.value.trim() : '',
-        categoria: categoriaInput ? categoriaInput.value.trim() : '',
-        lugar: lugarInput ? lugarInput.value.trim() : '',
-        fecha: fechaInput ? fechaInput.value.trim() : '',
-        hora: horaInput ? horaInput.value.trim() : '',
-        observaciones: observacionesInput ? observacionesInput.value.trim() : ''
+        fecha: fecha,
+        hora: hora,
+        lugar: 'Evento de Empresa',
+        timestamp: currentDate.toISOString()
     };
     
     console.log('✅ Datos del formulario preparados:', formData);
@@ -779,127 +780,105 @@ function prepareFormData() {
 }
 
 /**
- * Envía el registro a Google Apps Script usando un iframe oculto
+ * Envía el registro a Google Apps Script usando JSONP
  */
 async function sendRegistration(data) {
+    console.log('🔄 Enviando registro usando JSONP...');
+    console.log('🔄 Datos a enviar:', data);
+    
     return new Promise((resolve, reject) => {
-        try {
-            console.log('Enviando registro usando iframe oculto para evitar CORS');
+        const callbackName = 'registration_callback_' + Date.now() + '_' + Math.floor(Math.random() * 10000);
+        
+        // Función de limpieza
+        const cleanup = () => {
+            if (window[callbackName]) {
+                delete window[callbackName];
+            }
+            const existingScript = document.getElementById('registration-script');
+            if (existingScript) {
+                existingScript.remove();
+            }
+        };
+        
+        // Definir callback global
+        window[callbackName] = (response) => {
+            console.log('✅ Respuesta del servidor:', response);
+            cleanup();
             
-            // Crear iframe oculto
-            const iframe = document.createElement('iframe');
-            iframe.style.display = 'none';
-            iframe.name = 'registration-frame';
-            document.body.appendChild(iframe);
+            if (response.status === 'SUCCESS' || response.status === 'success') {
+                resolve({
+                    status: 'SUCCESS',
+                    message: response.message || 'Registro guardado exitosamente',
+                    confirmed: true
+                });
+            } else if (response.status === 'ERROR' || response.status === 'error') {
+                resolve({
+                    status: 'ERROR',
+                    message: response.message || 'Error al guardar el registro',
+                    confirmed: false
+                });
+            } else {
+                resolve({
+                    status: 'SUCCESS',
+                    message: 'Registro enviado correctamente',
+                    confirmed: true
+                });
+            }
+        };
+        
+        // Timeout de 15 segundos
+        setTimeout(() => {
+            if (window[callbackName]) {
+                console.log('⚠️ Timeout en envío de registro');
+                cleanup();
+                resolve({
+                    status: 'SUCCESS',
+                    message: 'Registro enviado (timeout en verificación)',
+                    warning: true
+                });
+            }
+        }, 15000);
+        
+        // Crear URL para JSONP
+        const params = new URLSearchParams({
+            callback: callbackName,
+            action: 'register',
+            legajo: data.legajo,
+            nombreCompleto: data.nombreCompleto,
+            cantidadInvitados: data.cantidadInvitados,
+            invitados: JSON.stringify(data.invitados),
+            fecha: data.fecha,
+            hora: data.hora,
+            lugar: data.lugar,
+            timestamp: data.timestamp
+        });
+        
+        const url = `${CONFIG.apiUrl}?${params.toString()}`;
+        console.log('🔄 URL de envío:', url);
+        
+        // Crear script tag
+        const script = document.createElement('script');
+        script.id = 'registration-script';
+        script.src = url;
+        script.onerror = () => {
+            console.error('❌ Error al cargar script de registro');
+            console.error('❌ Posibles causas:');
+            console.error('   - Error 403: Permisos insuficientes en Google Apps Script');
+            console.error('   - URL de Google Apps Script incorrecta');
+            console.error('   - Problemas de red');
             
-            // Crear formulario temporal
-            const form = document.createElement('form');
-            form.method = 'POST';
-            form.action = CONFIG.apiUrl;
-            form.target = 'registration-frame';
-            form.style.display = 'none';
+            cleanup();
             
-            // Crear campo oculto con los datos JSON
-            const input = document.createElement('input');
-            input.type = 'hidden';
-            input.name = 'data';
-            input.value = JSON.stringify(data);
-            form.appendChild(input);
-            
-            // Función para verificar el registro después del envío
-            const verifyRegistration = async () => {
-                console.log('Verificando si el registro se guardó correctamente...');
-                
-                try {
-                    const verificationResult = await verifyRegistrationSaved(
-                        data.legajo, 
-                        data.fecha, 
-                        data.hora, 
-                        data.lugar
-                    );
-                    
-                    // Limpiar elementos
-                    if (form.parentNode) document.body.removeChild(form);
-                    if (iframe.parentNode) document.body.removeChild(iframe);
-                    
-                    if (verificationResult.confirmed === true) {
-                        console.log('✅ Registro confirmado en Google Sheets');
-                        resolve({
-                            status: 'SUCCESS',
-                            message: 'Registro guardado exitosamente',
-                            confirmed: true
-                        });
-                    } else if (verificationResult.confirmed === false) {
-                        console.log('❌ El registro no se encontró en Google Sheets');
-                        resolve({
-                            status: 'ERROR',
-                            message: 'El registro no se guardó correctamente',
-                            confirmed: false
-                        });
-                    } else if (verificationResult.warning) {
-                        console.log('⚠️ Timeout o error en verificación');
-                        resolve({
-                            status: 'SUCCESS',
-                            message: 'Registro enviado (verificación falló)',
-                            warning: true
-                        });
-                    } else {
-                        resolve({
-                            status: 'SUCCESS',
-                            message: 'Registro enviado correctamente',
-                            confirmed: true
-                        });
-                    }
-                } catch (error) {
-                    console.error('Error verificando registro:', error);
-                    
-                    // Limpiar elementos
-                    if (form.parentNode) document.body.removeChild(form);
-                    if (iframe.parentNode) document.body.removeChild(iframe);
-                    
-                    resolve({
-                        status: 'SUCCESS',
-                        message: 'Registro enviado (verificación falló)',
-                        warning: true
-                    });
-                }
-            };
-            
-            // Manejar la carga del iframe
-            iframe.onload = () => {
-                console.log('Iframe cargado, esperando 2 segundos antes de verificar...');
-                
-                // Esperar 2 segundos para que Google Apps Script procese el registro
-                setTimeout(verifyRegistration, 2000);
-            };
-            
-            // Manejar errores
-            iframe.onerror = () => {
-                console.error('Error en iframe');
-                
-                // Limpiar elementos
-                if (form.parentNode) document.body.removeChild(form);
-                if (iframe.parentNode) document.body.removeChild(iframe);
-                
-                reject(new Error('Error al enviar el registro'));
-            };
-            
-            // Timeout de seguridad más largo
-            setTimeout(() => {
-                if (iframe.parentNode) {
-                    console.log('Timeout alcanzado, verificando de todas formas...');
-                    verifyRegistration();
-                }
-            }, 15000); // 15 segundos
-            
-            // Agregar formulario al DOM y enviarlo
-            document.body.appendChild(form);
-            form.submit();
-            
-        } catch (error) {
-            console.error('Error enviando registro:', error);
-            reject(error);
-        }
+            // Mostrar mensaje más específico al usuario
+            resolve({
+                status: 'ERROR',
+                message: 'Error de permisos en Google Apps Script. Contacte al administrador.',
+                confirmed: false,
+                error: '403_FORBIDDEN'
+            });
+        };
+        
+        document.head.appendChild(script);
     });
 }
 
