@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Registro de Asistencia - Evento de Empresa</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎉 Registro de Asistencia</h1>
+            <p>Evento de Empresa</p>
+        </div>
+        
+        <div class="content">
+            <!-- Mensajes de estado -->
+            <div id="message" class="message"></div>
+            
+            <!-- Sección de búsqueda -->
+            <div class="search-section">
+                <label class="search-label" for="searchInput">
+                    🔍 Buscar colaborador por nombre o legajo:
+                </label>
+                <div class="search-input-container">
+                    <input 
+                        type="text" 
+                        id="searchInput" 
+                        class="search-input" 
+                        placeholder="Nombre o legajo (sin acentos funciona igual)..."
+                        autocomplete="off"
+                        inputmode="text"
+                    >
+                    <div class="search-hint">
+                        💡 Tip: Puedes escribir sin acentos (ej: "jose" encuentra "José")
+                    </div>
+                </div>
+                <div id="searchResults" class="search-results"></div>
+            </div>
+            
+            <!-- Sección de colaborador seleccionado -->
+            <div id="selectedSection" class="selected-section">
+                <div class="selected-info">
+                    <div id="selectedName" class="selected-name"></div>
+                    <div id="selectedLegajo" class="selected-legajo"></div>
+                </div>
+                
+                <!-- Formulario de registro -->
+                <form id="registrationForm">
+                    <div class="form-group">
+                        <label class="form-label" for="guestCount">
+                            👥 Cantidad de invitados que trae:
+                        </label>
+                        <input 
+                            type="number" 
+                            id="guestCount" 
+                            class="form-input" 
+                            min="0" 
+                            max="10" 
+                            value="0"
+                            required
+                            inputmode="numeric"
+                        >
+                        <small style="color: #666; font-size: 0.8em;">Máximo 10 invitados</small>
+                    </div>
+                    
+                    <div id="guestsSection" class="guests-section"></div>
+                    
+                    <button type="submit" class="btn" id="submitBtn">
+                        ✅ Confirmar Asistencia
+                    </button>
+                    
+                    <button type="button" class="btn btn-secondary" id="cancelBtn">
+                        ❌ Cancelar
+                    </button>
+                </form>
+            </div>
+            
+            <!-- Indicador de carga -->
+            <div id="loading" class="loading">
+                📡 Procesando registro...
+            </div>
+        </div>
+    </div>
+
+    <!-- Librerías externas -->
+    <script src="https://cdn.jsdelivr.net/npm/fuse.js@6.6.2"></script>
+    
+    <!-- Script principal -->
+    <script src="js/main.js"></script>
+</body>
+</html>
