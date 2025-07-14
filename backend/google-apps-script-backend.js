@@ -17,7 +17,149 @@ function doGet(e) {
     console.log('Recibida petición GET');
     console.log('Parámetros recibidos:', e.parameter);
     
-    // Verificar si es una petición de verificación de registro
+    // ===== MANEJAR REGISTRO DE ASISTENCIA =====
+    if (e.parameter.action === 'register') {
+      console.log('🔄 Procesando registro de asistencia');
+      console.log('Datos recibidos:', e.parameter);
+      
+      const callback = e.parameter.callback;
+      
+      try {
+        // Extraer datos del parámetro
+        const data = {
+          legajo: e.parameter.legajo,
+          nombreCompleto: e.parameter.nombreCompleto,
+          cantidadInvitados: parseInt(e.parameter.cantidadInvitados) || 0,
+          invitados: e.parameter.invitados ? JSON.parse(e.parameter.invitados) : [],
+          fecha: e.parameter.fecha,
+          hora: e.parameter.hora,
+          lugar: e.parameter.lugar,
+          timestamp: e.parameter.timestamp
+        };
+        
+        console.log('Datos procesados:', data);
+        
+        // Validar datos requeridos
+        if (!data.legajo || !data.nombreCompleto) {
+          console.error('❌ Faltan datos requeridos');
+          const errorResult = {
+            status: 'ERROR',
+            message: 'Faltan datos requeridos: legajo o nombreCompleto'
+          };
+          
+          if (callback) {
+            const jsonpResponse = callback + '(' + JSON.stringify(errorResult) + ');';
+            return ContentService
+              .createTextOutput(jsonpResponse)
+              .setMimeType(ContentService.MimeType.JAVASCRIPT);
+          } else {
+            return ContentService
+              .createTextOutput(JSON.stringify(errorResult))
+              .setMimeType(ContentService.MimeType.JSON);
+          }
+        }
+        
+        // Verificar que el colaborador existe
+        if (!colaboradorExists(data.legajo)) {
+          console.error('❌ Colaborador no encontrado:', data.legajo);
+          const errorResult = {
+            status: 'ERROR',
+            message: 'Colaborador no encontrado en el sistema'
+          };
+          
+          if (callback) {
+            const jsonpResponse = callback + '(' + JSON.stringify(errorResult) + ');';
+            return ContentService
+              .createTextOutput(jsonpResponse)
+              .setMimeType(ContentService.MimeType.JAVASCRIPT);
+          } else {
+            return ContentService
+              .createTextOutput(JSON.stringify(errorResult))
+              .setMimeType(ContentService.MimeType.JSON);
+          }
+        }
+        
+        // Verificar si ya está registrado
+        if (isAlreadyRegistered(data.legajo)) {
+          console.log('⚠️ Colaborador ya registrado:', data.legajo);
+          const warningResult = {
+            status: 'WARNING',
+            message: 'El colaborador ya está registrado para este evento'
+          };
+          
+          if (callback) {
+            const jsonpResponse = callback + '(' + JSON.stringify(warningResult) + ');';
+            return ContentService
+              .createTextOutput(jsonpResponse)
+              .setMimeType(ContentService.MimeType.JAVASCRIPT);
+          } else {
+            return ContentService
+              .createTextOutput(JSON.stringify(warningResult))
+              .setMimeType(ContentService.MimeType.JSON);
+          }
+        }
+        
+        // Registrar asistencia
+        console.log('✅ Guardando registro en Google Sheets...');
+        const result = registerAttendance(data);
+        
+        if (result.success) {
+          console.log('✅ Registro guardado exitosamente');
+          const successResult = {
+            status: 'SUCCESS',
+            message: 'Registro de asistencia guardado exitosamente'
+          };
+          
+          if (callback) {
+            const jsonpResponse = callback + '(' + JSON.stringify(successResult) + ');';
+            return ContentService
+              .createTextOutput(jsonpResponse)
+              .setMimeType(ContentService.MimeType.JAVASCRIPT);
+          } else {
+            return ContentService
+              .createTextOutput(JSON.stringify(successResult))
+              .setMimeType(ContentService.MimeType.JSON);
+          }
+        } else {
+          console.error('❌ Error al guardar registro:', result.error);
+          const errorResult = {
+            status: 'ERROR',
+            message: 'Error al guardar el registro: ' + result.error
+          };
+          
+          if (callback) {
+            const jsonpResponse = callback + '(' + JSON.stringify(errorResult) + ');';
+            return ContentService
+              .createTextOutput(jsonpResponse)
+              .setMimeType(ContentService.MimeType.JAVASCRIPT);
+          } else {
+            return ContentService
+              .createTextOutput(JSON.stringify(errorResult))
+              .setMimeType(ContentService.MimeType.JSON);
+          }
+        }
+        
+      } catch (error) {
+        console.error('❌ Error procesando registro:', error);
+        const errorResult = {
+          status: 'ERROR',
+          message: 'Error interno al procesar el registro: ' + error.message
+        };
+        
+        if (callback) {
+          const jsonpResponse = callback + '(' + JSON.stringify(errorResult) + ');';
+          return ContentService
+            .createTextOutput(jsonpResponse)
+            .setMimeType(ContentService.MimeType.JAVASCRIPT);
+        } else {
+          return ContentService
+            .createTextOutput(JSON.stringify(errorResult))
+            .setMimeType(ContentService.MimeType.JSON);
+        }
+      }
+    }
+    
+    // ===== MANEJAR VERIFICACIÓN DE REGISTRO =====
     if (e.parameter.action === 'check' && e.parameter.legajo) {
       console.log('Verificando registro para legajo:', e.parameter.legajo);
       
@@ -318,43 +460,52 @@ function isAlreadyRegistered(legajo) {
  */
 function registerAttendance(data) {
   try {
+    console.log('🔄 registerAttendance iniciado con datos:', data);
+    
     let sheet = SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName(SHEET_NAME);
     
     // Si la hoja no existe, la creamos
     if (!sheet) {
+      console.log('📝 Creando hoja de registros...');
       sheet = createRegistrationSheet();
     }
     
     // Preparar datos para insertar
     const timestamp = new Date();
-    const invitadosText = data.invitados.length > 0 ? 
+    const invitadosText = data.invitados && data.invitados.length > 0 ? 
       data.invitados.map(inv => `${inv.nombre} (${inv.vinculo})`).join(', ') : 
       'Sin invitados';
     
     const rowData = [
       data.legajo,
       data.nombreCompleto,
-      data.fecha || '',
-      data.hora || '',
-      data.lugar || '',
-      data.invitados.length,
+      data.fecha || timestamp.toISOString().split('T')[0], // Usar fecha actual si no se proporciona
+      data.hora || timestamp.toTimeString().split(' ')[0], // Usar hora actual si no se proporciona  
+      data.lugar || 'Evento de Empresa',
+      data.cantidadInvitados || 0,
       invitadosText,
       timestamp,
       'Confirmado'
     ];
     
+    console.log('📝 Insertando fila:', rowData);
+    
     // Insertar nueva fila
     sheet.appendRow(rowData);
     
+    console.log('✅ Fila insertada exitosamente');
+    
     // También podemos guardar los invitados en una hoja separada si es necesario
-    if (data.invitados.length > 0) {
+    if (data.invitados && data.invitados.length > 0) {
+      console.log('👥 Guardando invitados en hoja separada...');
       saveGuests(data.legajo, data.invitados);
     }
     
+    console.log('✅ registerAttendance completado exitosamente');
     return { success: true };
     
   } catch (error) {
-    console.error('Error registrando asistencia:', error);
+    console.error('❌ Error registrando asistencia:', error);
     return { success: false, error: error.message };
   }
 }
