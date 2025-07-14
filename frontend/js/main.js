@@ -273,27 +273,23 @@ async function handleSubmit(event) {
     
     console.log('📤 Datos a enviar:', formData);
     
+    // Iniciar secuencia de envío
+    showSubmissionProcess();
+    
     // Enviar datos
     try {
-        elements.submitBtn.disabled = true;
-        showLoading(true);
-        
         const response = await sendRegistration(formData);
         console.log('✅ Respuesta:', response);
         
         if (response.status === 'SUCCESS' || response.status === 'success') {
-            showMessage('✅ Registro enviado correctamente', 'success');
-            resetForm();
+            showSuccessConfirmation(selectedColaborador.nombreCompleto, guestCount);
         } else {
-            showMessage('❌ Error al enviar registro', 'error');
+            showErrorConfirmation('Error al procesar el registro en el servidor');
         }
         
     } catch (error) {
         console.error('❌ Error:', error);
-        showMessage('❌ Error al procesar registro', 'error');
-    } finally {
-        elements.submitBtn.disabled = false;
-        showLoading(false);
+        showErrorConfirmation('Error de conexión al enviar el registro');
     }
 }
 
@@ -525,6 +521,222 @@ function showLoadingError() {
     }
     
     console.log('❌ Error en carga inicial');
+}
+
+// Estados de confirmación
+function showSubmissionProcess() {
+    // Limpiar pantalla
+    clearScreen();
+    
+    // Mostrar estado de carga
+    showSubmissionLoading();
+    
+    console.log('🔄 Iniciando proceso de envío...');
+}
+
+function clearScreen() {
+    // Ocultar todas las secciones principales
+    const searchSection = document.querySelector('.search-section');
+    const selectedSection = elements.selectedSection;
+    const message = elements.message;
+    
+    if (searchSection) {
+        searchSection.style.display = 'none';
+    }
+    
+    if (selectedSection) {
+        selectedSection.style.display = 'none';
+    }
+    
+    if (message) {
+        message.style.display = 'none';
+    }
+    
+    console.log('🧹 Pantalla limpiada');
+}
+
+function showSubmissionLoading() {
+    // Crear o mostrar el contenedor de carga de envío
+    let loadingContainer = document.getElementById('submissionLoading');
+    
+    if (!loadingContainer) {
+        loadingContainer = document.createElement('div');
+        loadingContainer.id = 'submissionLoading';
+        loadingContainer.className = 'submission-loading';
+        loadingContainer.innerHTML = `
+            <div class="loading-content">
+                <div class="loading-spinner"></div>
+                <h2>📤 Enviando Registro</h2>
+                <p>Por favor espera mientras procesamos tu confirmación...</p>
+            </div>
+        `;
+        
+        document.querySelector('.content').appendChild(loadingContainer);
+    }
+    
+    loadingContainer.style.display = 'flex';
+    console.log('⏳ Mostrando carga de envío');
+}
+
+function hideSubmissionLoading() {
+    const loadingContainer = document.getElementById('submissionLoading');
+    if (loadingContainer) {
+        loadingContainer.style.display = 'none';
+    }
+    console.log('✅ Ocultando carga de envío');
+}
+
+function showSuccessConfirmation(collaboratorName, guestCount) {
+    // Ocultar carga
+    hideSubmissionLoading();
+    
+    // Crear o mostrar confirmación de éxito
+    let successContainer = document.getElementById('successConfirmation');
+    
+    if (!successContainer) {
+        successContainer = document.createElement('div');
+        successContainer.id = 'successConfirmation';
+        successContainer.className = 'success-confirmation';
+        
+        document.querySelector('.content').appendChild(successContainer);
+    }
+    
+    const invitadosText = guestCount === 0 ? 'sin invitados' : 
+                         guestCount === 1 ? 'con 1 invitado' : 
+                         `con ${guestCount} invitados`;
+    
+    successContainer.innerHTML = `
+        <div class="success-content">
+            <div class="success-icon">✅</div>
+            <h2>¡Registro Exitoso!</h2>
+            <div class="success-details">
+                <p><strong>${collaboratorName}</strong></p>
+                <p>Confirmación registrada ${invitadosText}</p>
+                <p class="success-time">Registrado el ${new Date().toLocaleDateString('es-AR')} a las ${new Date().toLocaleTimeString('es-AR')}</p>
+            </div>
+            <div class="success-actions">
+                <button id="closePageBtn" class="btn btn-primary">
+                    🚪 Cerrar Aplicación
+                </button>
+                <button id="newRegistrationBtn" class="btn btn-secondary">
+                    ➕ Nuevo Registro
+                </button>
+            </div>
+        </div>
+    `;
+    
+    successContainer.style.display = 'flex';
+    
+    // Agregar event listeners
+    document.getElementById('closePageBtn').addEventListener('click', closePage);
+    document.getElementById('newRegistrationBtn').addEventListener('click', startNewRegistration);
+    
+    console.log('🎉 Mostrando confirmación de éxito');
+}
+
+function showErrorConfirmation(errorMessage) {
+    // Ocultar carga
+    hideSubmissionLoading();
+    
+    // Crear o mostrar confirmación de error
+    let errorContainer = document.getElementById('errorConfirmation');
+    
+    if (!errorContainer) {
+        errorContainer = document.createElement('div');
+        errorContainer.id = 'errorConfirmation';
+        errorContainer.className = 'error-confirmation';
+        
+        document.querySelector('.content').appendChild(errorContainer);
+    }
+    
+    errorContainer.innerHTML = `
+        <div class="error-content">
+            <div class="error-icon">❌</div>
+            <h2>Error en el Registro</h2>
+            <div class="error-details">
+                <p>${errorMessage}</p>
+                <p class="error-time">Intento fallido el ${new Date().toLocaleDateString('es-AR')} a las ${new Date().toLocaleTimeString('es-AR')}</p>
+            </div>
+            <div class="error-actions">
+                <button id="retryBtn" class="btn btn-primary">
+                    🔄 Intentar Nuevamente
+                </button>
+                <button id="closePageBtn" class="btn btn-secondary">
+                    🚪 Cerrar Aplicación
+                </button>
+            </div>
+        </div>
+    `;
+    
+    errorContainer.style.display = 'flex';
+    
+    // Agregar event listeners
+    document.getElementById('retryBtn').addEventListener('click', restoreForm);
+    document.getElementById('closePageBtn').addEventListener('click', closePage);
+    
+    console.log('❌ Mostrando confirmación de error');
+}
+
+function closePage() {
+    // Intentar cerrar la ventana/tab
+    if (window.close) {
+        window.close();
+    }
+    
+    // Fallback: redirigir o mostrar mensaje
+    setTimeout(() => {
+        window.location.href = 'about:blank';
+    }, 500);
+    
+    console.log('🚪 Cerrando aplicación');
+}
+
+function startNewRegistration() {
+    // Limpiar todos los contenedores de confirmación
+    const containers = ['submissionLoading', 'successConfirmation', 'errorConfirmation'];
+    containers.forEach(id => {
+        const container = document.getElementById(id);
+        if (container) {
+            container.style.display = 'none';
+        }
+    });
+    
+    // Restaurar pantalla inicial
+    restoreInitialScreen();
+    
+    console.log('➕ Iniciando nuevo registro');
+}
+
+function restoreForm() {
+    // Ocultar confirmación de error
+    const errorContainer = document.getElementById('errorConfirmation');
+    if (errorContainer) {
+        errorContainer.style.display = 'none';
+    }
+    
+    // Restaurar formulario
+    restoreInitialScreen();
+    
+    console.log('🔄 Restaurando formulario');
+}
+
+function restoreInitialScreen() {
+    // Mostrar secciones principales
+    const searchSection = document.querySelector('.search-section');
+    const selectedSection = elements.selectedSection;
+    
+    if (searchSection) {
+        searchSection.style.display = 'block';
+    }
+    
+    if (selectedSection && selectedColaborador) {
+        selectedSection.style.display = 'block';
+    }
+    
+    // Resetear formulario
+    resetForm();
+    
+    console.log('🔄 Pantalla inicial restaurada');
 }
 
 console.log('📁 Archivo cargado - Versión:', CONFIG.version);
