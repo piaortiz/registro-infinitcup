@@ -205,6 +205,29 @@ body {
     z-index: 10 !important;
 }
 
+/* Específico para GitHub Pages */
+.selected-section[data-visible="true"] {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    position: relative !important;
+    z-index: 10 !important;
+    min-height: 300px !important;
+}
+
+/* Fallback para cualquier elemento con selectedSection */
+#selectedSection {
+    transition: all 0.3s ease;
+}
+
+#selectedSection.active,
+#selectedSection[data-visible="true"] {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    transform: translateY(0) !important;
+}
+
 .selected-header {
     background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
     color: white;

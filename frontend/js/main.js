@@ -381,30 +381,113 @@ function selectColaborador(colaborador) {
         return;
     }
     
-    // Mostrar información del colaborador seleccionado
-    elements.selectedName.textContent = colaborador.nombreCompleto;
-    elements.selectedLegajo.textContent = `Legajo: ${colaborador.legajo}`;
-    
-    // Ocultar sección de búsqueda
-    const searchSection = document.querySelector('.search-section');
-    if (searchSection) {
-        searchSection.style.display = 'none';
+    // Función para mostrar la sección con reintentos
+    function showSelectedSection() {
+        console.log('Intentando mostrar selectedSection...');
+        
+        // Ocultar sección de búsqueda primero
+        const searchSection = document.querySelector('.search-section');
+        if (searchSection) {
+            searchSection.style.display = 'none';
+        }
+        
+        // Limpiar y ocultar resultados de búsqueda
+        elements.searchInput.value = '';
+        hideSearchResults();
+        
+        // Mostrar información del colaborador
+        elements.selectedName.textContent = colaborador.nombreCompleto;
+        elements.selectedLegajo.textContent = `Legajo: ${colaborador.legajo}`;
+        
+        // Aplicar múltiples métodos para forzar visualización
+        const section = elements.selectedSection;
+        
+        // Método 1: Estilos inline
+        section.style.display = 'block';
+        section.style.visibility = 'visible';
+        section.style.opacity = '1';
+        section.style.position = 'relative';
+        section.style.zIndex = '10';
+        section.style.minHeight = '300px';
+        
+        // Método 2: Clases CSS
+        section.classList.add('active');
+        section.classList.remove('hidden');
+        
+        // Método 3: Atributos HTML
+        section.setAttribute('data-visible', 'true');
+        section.removeAttribute('hidden');
+        
+        // Forzar reflow múltiples veces
+        section.offsetHeight;
+        section.offsetWidth;
+        
+        // Verificar que sea visible
+        const rect = section.getBoundingClientRect();
+        console.log('Dimensiones después de mostrar:', rect);
+        
+        if (rect.height > 0 && rect.width > 0) {
+            console.log('✅ Sección visible correctamente');
+            
+            // Hacer scroll suave
+            setTimeout(() => {
+                section.scrollIntoView({ 
+                    behavior: 'smooth', 
+                    block: 'start' 
+                });
+            }, 100);
+            
+            return true;
+        } else {
+            console.warn('❌ Sección aún no visible, reintentando...');
+            return false;
+        }
     }
     
-    // Forzar la visualización de la sección seleccionada
-    elements.selectedSection.style.display = 'block';
-    elements.selectedSection.style.visibility = 'visible';
-    elements.selectedSection.style.opacity = '1';
-    elements.selectedSection.style.position = 'relative';
-    elements.selectedSection.style.zIndex = '10';
-    elements.selectedSection.classList.add('active');
+    // Intentar mostrar con reintentos
+    let attempts = 0;
+    const maxAttempts = 5;
     
-    // Forzar el reflow del DOM
-    elements.selectedSection.offsetHeight;
-    
-    // Limpiar y ocultar resultados de búsqueda
-    elements.searchInput.value = '';
-    hideSearchResults();
+    function attemptShow() {
+        attempts++;
+        console.log(`Intento ${attempts} de ${maxAttempts}`);
+        
+        if (showSelectedSection()) {
+            console.log('✅ Sección mostrada exitosamente');
+            return;
+        }
+        
+        if (attempts < maxAttempts) {
+            setTimeout(attemptShow, 200 * attempts); // Delay progresivo
+        } else {
+            console.error('❌ No se pudo mostrar la sección después de múltiples intentos');
+            // Fallback: mostrar con método alternativo
+            elements.selectedSection.innerHTML = `
+                <div style="display: block !important; visibility: visible !important; opacity: 1 !important; padding: 20px; background: #f0f0f0; border-radius: 8px; margin: 20px 0;">
+                    <h2 style="color: #28a745; margin: 0 0 15px 0;">✅ Empleado Seleccionado</h2>
+                    <div style="text-align: center; margin-bottom: 20px;">
+                        <div style="font-size: 1.4em; font-weight: 700; color: #2c3e50; margin-bottom: 5px;">${colaborador.nombreCompleto}</div>
+                        <div style="color: #7f8c8d; font-size: 1em;">Legajo: ${colaborador.legajo}</div>
+                    </div>
+                    <form id="registrationForm">
+                        <div style="margin-bottom: 20px;">
+                            <label style="display: block; margin-bottom: 8px; font-weight: 600;">👥 Cantidad de invitados que trae:</label>
+                            <input type="number" id="guestCount" min="0" max="10" value="0" required style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 6px;">
+                            <small style="color: #666; font-size: 0.8em;">Máximo 10 invitados</small>
+                        </div>
+                        <div id="guestsSection"></div>
+                        <div style="display: flex; gap: 10px; flex-direction: column; margin-top: 20px;">
+                            <button type="submit" style="background: #007bff; color: white; border: none; padding: 12px 20px; border-radius: 6px; font-size: 1em; cursor: pointer;">✅ Confirmar Asistencia</button>
+                            <button type="button" onclick="handleCancel()" style="background: #6c757d; color: white; border: none; padding: 12px 20px; border-radius: 6px; font-size: 1em; cursor: pointer;">← Volver a Buscar</button>
+                        </div>
+                    </form>
+                </div>
+            `;
+            
+            // Reconfigurar event listeners
+            setupEventListeners();
+        }
+    }
     
     // Limpiar formulario
     resetForm();
@@ -412,26 +495,8 @@ function selectColaborador(colaborador) {
     // Ocultar mensajes anteriores
     hideMessage();
     
-    // Hacer scroll al elemento - con mayor delay para asegurar renderizado
-    setTimeout(() => {
-        // Verificar que el elemento sea visible
-        const rect = elements.selectedSection.getBoundingClientRect();
-        console.log('Dimensiones después del delay:', rect);
-        
-        if (rect.height > 0) {
-            elements.selectedSection.scrollIntoView({ 
-                behavior: 'smooth', 
-                block: 'start' 
-            });
-        } else {
-            console.warn('El elemento selectedSection no tiene altura visible');
-            // Forzar scroll al contenedor
-            document.querySelector('.content').scrollIntoView({ 
-                behavior: 'smooth', 
-                block: 'start' 
-            });
-        }
-    }, 200);
+    // Iniciar proceso de mostrar
+    attemptShow();
     
     console.log('Colaborador seleccionado correctamente:', colaborador);
 }
