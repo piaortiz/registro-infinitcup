@@ -27,22 +27,22 @@
                         type="text" 
                         id="searchInput" 
                         class="search-input" 
-                        placeholder="Nombre o legajo (sin acentos funciona igual)..."
+                        placeholder="Ingresa nombre o legajo del colaborador"
                         autocomplete="off"
                         inputmode="text"
                     >
-                    <div class="search-hint">
-                        💡 Tip: Puedes escribir sin acentos (ej: "jose" encuentra "José")
-                    </div>
                 </div>
                 <div id="searchResults" class="search-results"></div>
             </div>
             
             <!-- Sección de colaborador seleccionado -->
             <div id="selectedSection" class="selected-section">
-                <div class="selected-info">
-                    <div id="selectedName" class="selected-name"></div>
-                    <div id="selectedLegajo" class="selected-legajo"></div>
+                <div class="selected-header">
+                    <h2>✅ Empleado Seleccionado</h2>
+                    <div class="selected-info">
+                        <div id="selectedName" class="selected-name"></div>
+                        <div id="selectedLegajo" class="selected-legajo"></div>
+                    </div>
                 </div>
                 
                 <!-- Formulario de registro -->
@@ -66,13 +66,15 @@
                     
                     <div id="guestsSection" class="guests-section"></div>
                     
-                    <button type="submit" class="btn" id="submitBtn">
-                        ✅ Confirmar Asistencia
-                    </button>
-                    
-                    <button type="button" class="btn btn-secondary" id="cancelBtn">
-                        ❌ Cancelar
-                    </button>
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary" id="submitBtn">
+                            ✅ Confirmar Asistencia
+                        </button>
+                        
+                        <button type="button" class="btn btn-secondary" id="cancelBtn">
+                            ← Volver a Buscar
+                        </button>
+                    </div>
                 </form>
             </div>
             

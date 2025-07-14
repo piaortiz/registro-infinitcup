@@ -381,35 +381,20 @@ function selectColaborador(colaborador) {
         return;
     }
     
-    console.log('Elemento selectedSection encontrado:', elements.selectedSection);
-    console.log('Display actual antes del cambio:', elements.selectedSection.style.display);
-    console.log('Computed style antes del cambio:', getComputedStyle(elements.selectedSection).display);
-    
     // Mostrar información del colaborador seleccionado
     elements.selectedName.textContent = colaborador.nombreCompleto;
     elements.selectedLegajo.textContent = `Legajo: ${colaborador.legajo}`;
     
-    // Mostrar sección de registro con múltiples intentos
+    // Ocultar sección de búsqueda
+    const searchSection = document.querySelector('.search-section');
+    if (searchSection) {
+        searchSection.style.display = 'none';
+    }
+    
+    // Mostrar sección de registro
     elements.selectedSection.style.display = 'block';
     elements.selectedSection.style.visibility = 'visible';
     elements.selectedSection.style.opacity = '1';
-    
-    console.log('Display después del cambio:', elements.selectedSection.style.display);
-    console.log('Computed style después del cambio:', getComputedStyle(elements.selectedSection).display);
-    console.log('Visibility después del cambio:', elements.selectedSection.style.visibility);
-    console.log('Opacity después del cambio:', elements.selectedSection.style.opacity);
-    
-    // Verificar si el elemento es visible
-    const rect = elements.selectedSection.getBoundingClientRect();
-    console.log('Dimensiones del elemento:', rect);
-    
-    // Hacer scroll al elemento para asegurar que sea visible
-    setTimeout(() => {
-        elements.selectedSection.scrollIntoView({ 
-            behavior: 'smooth', 
-            block: 'center' 
-        });
-    }, 100);
     
     // Limpiar y ocultar resultados de búsqueda
     elements.searchInput.value = '';
@@ -420,6 +405,14 @@ function selectColaborador(colaborador) {
     
     // Ocultar mensajes anteriores
     hideMessage();
+    
+    // Hacer scroll al elemento para asegurar que sea visible
+    setTimeout(() => {
+        elements.selectedSection.scrollIntoView({ 
+            behavior: 'smooth', 
+            block: 'start' 
+        });
+    }, 100);
     
     console.log('Colaborador seleccionado correctamente:', colaborador);
 }
@@ -830,11 +823,29 @@ function handleApiResponse(response) {
  */
 function handleCancel() {
     selectedColaborador = null;
+    
+    // Ocultar sección de registro
     elements.selectedSection.style.display = 'none';
+    
+    // Mostrar sección de búsqueda
+    const searchSection = document.querySelector('.search-section');
+    if (searchSection) {
+        searchSection.style.display = 'block';
+    }
+    
+    // Limpiar y resetear
     elements.searchInput.value = '';
     resetForm();
     hideMessage();
     hideSearchResults();
+    
+    // Hacer scroll a la parte superior para volver a la búsqueda
+    setTimeout(() => {
+        document.querySelector('.search-section').scrollIntoView({ 
+            behavior: 'smooth', 
+            block: 'start' 
+        });
+    }, 100);
 }
 
 /**
