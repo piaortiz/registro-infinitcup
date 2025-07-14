@@ -183,6 +183,14 @@ body {
     border-radius: 12px;
     display: none;
     border: 1px solid #dee2e6;
+    position: relative;
+    z-index: 1;
+}
+
+.selected-section[style*="display: block"] {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
 }
 
 .selected-info {

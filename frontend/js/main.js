@@ -403,6 +403,14 @@ function selectColaborador(colaborador) {
     const rect = elements.selectedSection.getBoundingClientRect();
     console.log('Dimensiones del elemento:', rect);
     
+    // Hacer scroll al elemento para asegurar que sea visible
+    setTimeout(() => {
+        elements.selectedSection.scrollIntoView({ 
+            behavior: 'smooth', 
+            block: 'center' 
+        });
+    }, 100);
+    
     // Limpiar y ocultar resultados de búsqueda
     elements.searchInput.value = '';
     hideSearchResults();
