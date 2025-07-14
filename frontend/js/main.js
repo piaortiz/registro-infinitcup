@@ -246,8 +246,8 @@ function displayResults(results) {
     elements.searchResults.style.display = 'block';
 }
 
-// Seleccionar colaborador
-function selectColaborador(colaborador) {
+// Seleccionar colaborador con verificación inmediata
+async function selectColaborador(colaborador) {
     console.log('✅ Colaborador seleccionado:', colaborador);
     selectedColaborador = colaborador;
     
@@ -263,6 +263,129 @@ function selectColaborador(colaborador) {
     // Limpiar formulario
     elements.guestCount.value = '0';
     elements.guestsSection.innerHTML = '';
+    
+    // Verificar inmediatamente si ya fue registrado
+    await checkIfAlreadyRegistered(colaborador);
+}
+
+// Verificar si el colaborador ya fue registrado
+async function checkIfAlreadyRegistered(colaborador) {
+    try {
+        console.log('🔍 Verificando si ya está registrado:', colaborador.legajo);
+        
+        // Mostrar mensaje de verificación
+        showMessage('🔍 Verificando registro...', 'info');
+        
+        const response = await checkRegistrationStatus(colaborador.legajo);
+        
+        if (response.yaRegistrado) {
+            // Ya está registrado - mostrar advertencia
+            showAlreadyRegisteredWarning(colaborador, response.registroAnterior);
+        } else {
+            // No está registrado - continuar normalmente
+            hideMessage();
+            console.log('✅ Colaborador disponible para registro');
+        }
+        
+    } catch (error) {
+        console.error('❌ Error verificando registro:', error);
+        showMessage('⚠️ No se pudo verificar el registro anterior', 'warning');
+    }
+}
+
+// Consultar estado de registro
+async function checkRegistrationStatus(legajo) {
+    return new Promise((resolve, reject) => {
+        const callbackName = 'check_callback_' + Date.now();
+        
+        const cleanup = () => {
+            if (window[callbackName]) delete window[callbackName];
+            const script = document.getElementById('check-script');
+            if (script) script.remove();
+        };
+        
+        window[callbackName] = (response) => {
+            console.log('📨 Respuesta verificación:', response);
+            cleanup();
+            resolve(response);
+        };
+        
+        // Crear URL con parámetros
+        const params = new URLSearchParams({
+            callback: callbackName,
+            action: 'check',
+            legajo: legajo
+        });
+        
+        const url = `${CONFIG.apiUrl}?${params.toString()}`;
+        
+        const script = document.createElement('script');
+        script.id = 'check-script';
+        script.src = url;
+        script.onerror = () => {
+            cleanup();
+            reject(new Error('Error consultando registro'));
+        };
+        
+        document.head.appendChild(script);
+        
+        // Timeout
+        setTimeout(() => {
+            if (window[callbackName]) {
+                cleanup();
+                resolve({ yaRegistrado: false, error: 'timeout' });
+            }
+        }, 5000);
+    });
+}
+
+// Mostrar advertencia de registro previo
+function showAlreadyRegisteredWarning(colaborador, registroAnterior) {
+    const message = elements.message;
+    if (message) {
+        const fechaRegistro = registroAnterior.timestamp ? 
+            new Date(registroAnterior.timestamp).toLocaleDateString('es-AR') : 
+            'fecha desconocida';
+        
+        const invitadosInfo = registroAnterior.invitados ? 
+            registroAnterior.invitados.length > 0 ? 
+                `con ${registroAnterior.invitados.length} invitado(s)` : 
+                'sin invitados' : 
+            'información de invitados no disponible';
+        
+        message.innerHTML = `
+            <div style="text-align: center;">
+                <strong>⚠️ COLABORADOR YA REGISTRADO</strong><br>
+                <span style="color: #666; font-size: 0.9em;">
+                    ${colaborador.nombreCompleto} ya confirmó su asistencia<br>
+                    el ${fechaRegistro} ${invitadosInfo}
+                </span>
+            </div>
+        `;
+        message.className = 'message warning';
+        message.style.display = 'block';
+        
+        // Deshabilitar el botón de envío
+        if (elements.submitBtn) {
+            elements.submitBtn.disabled = true;
+            elements.submitBtn.textContent = '❌ Ya Registrado';
+            elements.submitBtn.style.opacity = '0.6';
+        }
+    }
+}
+
+// Función para ocultar mensaje
+function hideMessage() {
+    if (elements.message) {
+        elements.message.style.display = 'none';
+        
+        // Habilitar el botón de envío
+        if (elements.submitBtn) {
+            elements.submitBtn.disabled = false;
+            elements.submitBtn.textContent = '✅ Confirmar Asistencia';
+            elements.submitBtn.style.opacity = '1';
+        }
+    }
 }
 
 // Manejar cambio de invitados
@@ -438,9 +561,26 @@ async function sendRegistration(data) {
 // Utilidades
 function showMessage(text, type = 'info') {
     if (elements.message) {
-        elements.message.textContent = text;
+        elements.message.innerHTML = text; // Cambio a innerHTML para soportar HTML
         elements.message.className = `message ${type}`;
         elements.message.style.display = 'block';
+        
+        // Manejar botón según el tipo de mensaje
+        if (type === 'warning') {
+            // Para advertencias (ya registrado), deshabilitar botón
+            if (elements.submitBtn) {
+                elements.submitBtn.disabled = true;
+                elements.submitBtn.textContent = '❌ Ya Registrado';
+                elements.submitBtn.style.opacity = '0.6';
+            }
+        } else if (type === 'info') {
+            // Para mensajes informativos, mantener botón habilitado
+            if (elements.submitBtn) {
+                elements.submitBtn.disabled = false;
+                elements.submitBtn.textContent = '✅ Confirmar Asistencia';
+                elements.submitBtn.style.opacity = '1';
+            }
+        }
         
         if (type === 'success') {
             setTimeout(() => {
@@ -462,6 +602,9 @@ function resetForm() {
     elements.searchInput.value = '';
     elements.guestCount.value = '0';
     elements.guestsSection.innerHTML = '';
+    
+    // Limpiar mensaje y restaurar botón
+    hideMessage();
 }
 
 // Theme management
