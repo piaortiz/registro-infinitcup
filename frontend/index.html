@@ -2,29 +2,34 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Registro de Asistencia - Evento de Empresa</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Registro de Asistencia - Casino Magic</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@200;300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/styles.css">
 </head>
-<body>
+<body style="margin: 0; padding: 0; background: #8E97FD;">
     <div class="container">
+        <!-- Cabecera con fondo violeta -->
         <div class="header">
-            <h1>🎉 Registro de Asistencia</h1>
-            <p>Evento de Empresa</p>
+            <div class="header-content">
+                <div class="star-emoji">🤩</div>
+                <div class="wave-decoration"></div>
+            </div>
             <button id="themeToggle" class="theme-toggle" title="Cambiar tema">
                 🌙
             </button>
         </div>
         
+        <!-- Área de contenido -->
         <div class="content">
             <!-- Mensajes de estado -->
             <div id="message" class="message"></div>
             
-            <!-- Sección de búsqueda -->
+            <!-- Título y búsqueda -->
             <div class="search-section">
-                <label class="search-label" for="searchInput">
-                    🔍 Buscar colaborador por nombre o legajo:
-                </label>
+                <h2 class="content-title">Buscar colaborador</h2>
                 <div class="search-input-container">
                     <input 
                         type="text" 
@@ -100,6 +105,17 @@
             <!-- Indicador de carga -->
             <div id="loading" class="loading">
                 📡 Procesando registro...
+            </div>
+        </div>
+        
+        <!-- Footer con logo -->
+        <div class="footer">
+            <div class="logo-container">
+                <div class="logo-icon">✨</div>
+                <div class="logo-text">
+                    <div class="logo-title">CASINO MAGIC</div>
+                    <div class="logo-subtitle">HOTEL & CASINO</div>
+                </div>
             </div>
         </div>
     </div>
