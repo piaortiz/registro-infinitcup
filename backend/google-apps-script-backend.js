@@ -31,6 +31,7 @@ function doGet(e) {
           nombreCompleto: e.parameter.nombreCompleto,
           cantidadInvitados: parseInt(e.parameter.cantidadInvitados) || 0,
           invitados: e.parameter.invitados ? JSON.parse(e.parameter.invitados) : [],
+          colaboradorAsiste: e.parameter.colaboradorAsiste === 'SI',
           fecha: e.parameter.fecha,
           hora: e.parameter.hora,
           lugar: e.parameter.lugar,
@@ -166,10 +167,44 @@ function doGet(e) {
       const isRegistered = isAlreadyRegistered(e.parameter.legajo);
       const callback = e.parameter.callback;
       
+      // Verificar si está marcado como YaRegistrado en la hoja de colaboradores
+      let yaRegistradoEnHoja = false;
+      try {
+        const colaboradoresSheet = SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName(COLABORADORES_SHEET);
+        if (colaboradoresSheet) {
+          const data = colaboradoresSheet.getDataRange().getValues();
+          const headers = data[0];
+          
+          // Encontrar el índice de la columna YaRegistrado
+          let yaRegistradoIndex = -1;
+          for (let i = 0; i < headers.length; i++) {
+            if (headers[i] === 'YaRegistrado') {
+              yaRegistradoIndex = i;
+              break;
+            }
+          }
+          
+          // Si existe la columna YaRegistrado, verificar
+          if (yaRegistradoIndex >= 0) {
+            // Buscar el legajo y verificar su estado
+            for (let i = 1; i < data.length; i++) {
+              if (data[i][0].toString() === e.parameter.legajo.toString() && data[i][yaRegistradoIndex] === 'SI') {
+                yaRegistradoEnHoja = true;
+                break;
+              }
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Error verificando YaRegistrado en hoja:', error);
+      }
+      
       const result = {
         registered: isRegistered,
+        yaRegistradoEnHoja: yaRegistradoEnHoja,
         legajo: e.parameter.legajo,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        message: isRegistered ? 'El colaborador ya está registrado para este evento' : 'El colaborador no está registrado'
       };
       
       if (callback) {
@@ -369,15 +404,32 @@ function getColaboradores() {
       throw new Error('La hoja de colaboradores está vacía');
     }
     
+    // Obtener índice de la columna YaRegistrado (si existe)
+    let yaRegistradoIndex = -1;
+    const headers = data[0];
+    for (let i = 0; i < headers.length; i++) {
+      if (headers[i] === 'YaRegistrado') {
+        yaRegistradoIndex = i;
+        break;
+      }
+    }
+    
     // Convertir datos a formato JSON (omitir la primera fila que son headers)
     const colaboradores = [];
     for (let i = 1; i < data.length; i++) {
       const row = data[i];
       if (row[0] && row[1]) { // Verificar que tenga legajo y nombre
-        colaboradores.push({
+        const colaborador = {
           legajo: row[0].toString(),
           nombreCompleto: row[1].toString()
-        });
+        };
+        
+        // Agregar estado de registro si existe la columna
+        if (yaRegistradoIndex >= 0) {
+          colaborador.yaRegistrado = (row[yaRegistradoIndex] === 'SI');
+        }
+        
+        colaboradores.push(colaborador);
       }
     }
     
@@ -417,20 +469,47 @@ function colaboradorExists(legajo) {
  */
 function isAlreadyRegistered(legajo) {
   try {
-    const sheet = SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName(SHEET_NAME);
+    // Primero verificamos en la hoja de registros
+    const registrosSheet = SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName(SHEET_NAME);
     
-    // Si la hoja no existe, la creamos
-    if (!sheet) {
+    // Si la hoja de registros existe, verificamos ahí
+    if (registrosSheet) {
+      const registrosData = registrosSheet.getDataRange().getValues();
+      
+      // Buscar en la columna de legajos (ahora columna 1, índice 1)
+      for (let i = 1; i < registrosData.length; i++) {
+        if (registrosData[i][1].toString() === legajo.toString()) {
+          return true;
+        }
+      }
+    } else {
+      // Si la hoja no existe, la creamos
       createRegistrationSheet();
-      return false;
     }
     
-    const data = sheet.getDataRange().getValues();
-    
-    // Buscar en la columna de legajos (ahora columna 1, índice 1)
-    for (let i = 1; i < data.length; i++) {
-      if (data[i][1].toString() === legajo.toString()) {
-        return true;
+    // Verificar también en la columna YaRegistrado de la hoja de colaboradores
+    const colaboradoresSheet = SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName(COLABORADORES_SHEET);
+    if (colaboradoresSheet) {
+      const data = colaboradoresSheet.getDataRange().getValues();
+      const headers = data[0];
+      
+      // Encontrar el índice de la columna YaRegistrado
+      let yaRegistradoIndex = -1;
+      for (let i = 0; i < headers.length; i++) {
+        if (headers[i] === 'YaRegistrado') {
+          yaRegistradoIndex = i;
+          break;
+        }
+      }
+      
+      // Si existe la columna YaRegistrado, verificar
+      if (yaRegistradoIndex >= 0) {
+        // Buscar el legajo y verificar su estado
+        for (let i = 1; i < data.length; i++) {
+          if (data[i][0].toString() === legajo.toString() && data[i][yaRegistradoIndex] === 'SI') {
+            return true;
+          }
+        }
       }
     }
     
@@ -459,18 +538,22 @@ function registerAttendance(data) {
     // Preparar timestamp
     const timestamp = new Date();
     
-    // PRIMERA FILA: Registro del colaborador principal
-    const mainRowData = [
-      timestamp,                    // Timestamp
-      data.legajo,                 // Legajo
-      data.nombreCompleto,         // NombreCompleto
-      'Sí',                        // Confirmado
-      data.nombreCompleto,         // InvitadoNombre (nombre del colaborador para sorteo)
-      'Colaborador'                // InvitadoVinculo (identificar que es el colaborador)
-    ];
-    
-    console.log('📝 Insertando fila del colaborador:', mainRowData);
-    sheet.appendRow(mainRowData);
+    // Registrar al colaborador principal solo si va a asistir
+    if (data.colaboradorAsiste) {
+      const mainRowData = [
+        timestamp,                    // Timestamp
+        data.legajo,                 // Legajo
+        data.nombreCompleto,         // NombreCompleto
+        'Sí',                        // Confirmado
+        data.nombreCompleto,         // InvitadoNombre (nombre del colaborador para sorteo)
+        'Colaborador'                // InvitadoVinculo (identificar que es el colaborador)
+      ];
+      
+      console.log('📝 Insertando fila del colaborador:', mainRowData);
+      sheet.appendRow(mainRowData);
+    } else {
+      console.log('ℹ️ El colaborador no asistirá personalmente, solo se registrarán sus invitados');
+    }
     
     // FILAS ADICIONALES: Una fila por cada invitado
     if (data.invitados && data.invitados.length > 0) {
@@ -486,10 +569,14 @@ function registerAttendance(data) {
           invitado.vinculo          // InvitadoVinculo
         ];
         
-        console.log(`� Insertando fila del invitado ${index + 1}:`, guestRowData);
+        console.log(`📝 Insertando fila del invitado ${index + 1}:`, guestRowData);
         sheet.appendRow(guestRowData);
       });
     }
+    
+    // Actualizar estado del colaborador a YaRegistrado = SI
+    console.log('📝 Actualizando estado a YaRegistrado = SI');
+    updateColaboradorRegistrado(data.legajo);
     
     console.log('✅ registerAttendance completado exitosamente');
     return { success: true };
@@ -603,5 +690,68 @@ function getStats() {
   } catch (error) {
     console.error('Error obteniendo estadísticas:', error);
     return { registros: 0, invitados: 0 };
+  }
+}
+
+/**
+ * Actualiza el estado de un colaborador a YaRegistrado = SI
+ */
+function updateColaboradorRegistrado(legajo) {
+  try {
+    console.log('🔄 Actualizando estado del colaborador:', legajo);
+    
+    const sheet = SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName(COLABORADORES_SHEET);
+    if (!sheet) {
+      throw new Error(`La hoja '${COLABORADORES_SHEET}' no existe`);
+    }
+    
+    const data = sheet.getDataRange().getValues();
+    
+    // Buscar índice de la columna YaRegistrado
+    let yaRegistradoIndex = -1;
+    const headers = data[0];
+    for (let i = 0; i < headers.length; i++) {
+      if (headers[i] === 'YaRegistrado') {
+        yaRegistradoIndex = i;
+        break;
+      }
+    }
+    
+    // Si no existe la columna YaRegistrado, la creamos
+    if (yaRegistradoIndex === -1) {
+      console.log('📝 Creando columna YaRegistrado');
+      yaRegistradoIndex = headers.length;
+      sheet.getRange(1, yaRegistradoIndex + 1).setValue('YaRegistrado');
+      
+      // Dar formato al header
+      const headerCell = sheet.getRange(1, yaRegistradoIndex + 1);
+      headerCell.setFontWeight('bold');
+      headerCell.setBackground('#4285f4');
+      headerCell.setFontColor('white');
+    }
+    
+    // Buscar la fila del colaborador por legajo
+    let rowIndex = -1;
+    for (let i = 1; i < data.length; i++) {
+      if (data[i][0].toString() === legajo.toString()) {
+        rowIndex = i + 1; // +1 porque el índice en la hoja empieza en 1
+        break;
+      }
+    }
+    
+    if (rowIndex === -1) {
+      console.warn('⚠️ No se encontró el colaborador con legajo:', legajo);
+      return false;
+    }
+    
+    // Actualizar el valor a "SI"
+    console.log(`📝 Marcando colaborador en fila ${rowIndex} como YaRegistrado = SI`);
+    sheet.getRange(rowIndex, yaRegistradoIndex + 1).setValue('SI');
+    
+    return true;
+    
+  } catch (error) {
+    console.error('❌ Error actualizando estado del colaborador:', error);
+    return false;
   }
 }

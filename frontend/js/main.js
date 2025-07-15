@@ -23,15 +23,18 @@ document.addEventListener('DOMContentLoaded', async function() {
     
     // Inicializar elementos
     elements = {
+        searchSection: document.querySelector('.search-section'),
         searchInput: document.getElementById('searchInput'),
         searchResults: document.getElementById('searchResults'),
         selectedSection: document.getElementById('selectedSection'),
         selectedName: document.getElementById('selectedName'),
         selectedLegajo: document.getElementById('selectedLegajo'),
         registrationForm: document.getElementById('registrationForm'),
+        collaboratorAttends: document.getElementById('collaboratorAttends'),
         guestCount: document.getElementById('guestCount'),
         guestsSection: document.getElementById('guestsSection'),
         submitBtn: document.getElementById('submitBtn'),
+        cancelBtn: document.getElementById('cancelBtn'),
         message: document.getElementById('message'),
         loading: document.getElementById('loading')
     };
@@ -192,6 +195,10 @@ function setupEventListeners() {
     if (elements.guestCount) {
         elements.guestCount.addEventListener('input', handleGuestCountChange);
     }
+    
+    if (elements.cancelBtn) {
+        elements.cancelBtn.addEventListener('click', handleCancel);
+    }
 }
 
 // Búsqueda optimizada con índices
@@ -255,7 +262,8 @@ async function selectColaborador(colaborador) {
     elements.selectedName.textContent = colaborador.nombreCompleto;
     elements.selectedLegajo.textContent = `Legajo: ${colaborador.legajo}`;
     
-    // Mostrar sección
+    // Ocultar sección de búsqueda y mostrar sección de selección
+    elements.searchSection.style.display = 'none';
     elements.selectedSection.style.display = 'block';
     elements.searchResults.style.display = 'none';
     elements.searchInput.value = '';
@@ -273,14 +281,22 @@ async function checkIfAlreadyRegistered(colaborador) {
     try {
         console.log('🔍 Verificando si ya está registrado:', colaborador.legajo);
         
+        // Verificar primero si ya tenemos el estado en el objeto del colaborador
+        if (colaborador.yaRegistrado) {
+            console.log('⚠️ Colaborador ya registrado (según datos locales)');
+            showAlreadyRegisteredWarning(colaborador, { yaRegistradoEnHoja: true });
+            return;
+        }
+        
         // Mostrar mensaje de verificación
         showMessage('🔍 Verificando registro...', 'info');
         
         const response = await checkRegistrationStatus(colaborador.legajo);
         
-        if (response.yaRegistrado) {
+        if (response.registered) {
             // Ya está registrado - mostrar advertencia
-            showAlreadyRegisteredWarning(colaborador, response.registroAnterior);
+            console.log('⚠️ Colaborador ya registrado (según verificación API)');
+            showAlreadyRegisteredWarning(colaborador, response);
         } else {
             // No está registrado - continuar normalmente
             hideMessage();
@@ -340,25 +356,21 @@ async function checkRegistrationStatus(legajo) {
 }
 
 // Mostrar advertencia de registro previo
-function showAlreadyRegisteredWarning(colaborador, registroAnterior) {
+function showAlreadyRegisteredWarning(colaborador, response) {
     const message = elements.message;
     if (message) {
-        const fechaRegistro = registroAnterior.timestamp ? 
-            new Date(registroAnterior.timestamp).toLocaleDateString('es-AR') : 
-            'fecha desconocida';
-        
-        const invitadosInfo = registroAnterior.invitados ? 
-            registroAnterior.invitados.length > 0 ? 
-                `con ${registroAnterior.invitados.length} invitado(s)` : 
-                'sin invitados' : 
-            'información de invitados no disponible';
+        // Determinar origen de la información
+        const registradoInfo = response && response.yaRegistradoEnHoja ? 
+            'según el registro de colaboradores' : 
+            'según el registro de asistencia';
         
         message.innerHTML = `
             <div style="text-align: center;">
                 <strong>⚠️ COLABORADOR YA REGISTRADO</strong><br>
                 <span style="color: #666; font-size: 0.9em;">
                     ${colaborador.nombreCompleto} ya confirmó su asistencia<br>
-                    el ${fechaRegistro} ${invitadosInfo}
+                    para este evento y no puede registrarse nuevamente.<br>
+                    <small>(${registradoInfo})</small>
                 </span>
             </div>
         `;
@@ -433,8 +445,15 @@ async function handleSubmit(event) {
         return;
     }
     
+    const collaboratorAttends = elements.collaboratorAttends.checked;
     const guestCount = parseInt(elements.guestCount.value) || 0;
     const invitados = [];
+    
+    // Validar que al menos hay un asistente (colaborador o invitado)
+    if (!collaboratorAttends && guestCount === 0) {
+        showMessage('❌ Debes indicar al menos un asistente (colaborador o invitado)', 'error');
+        return;
+    }
     
     // Validar y recopilar invitados
     for (let i = 1; i <= guestCount; i++) {
@@ -464,6 +483,7 @@ async function handleSubmit(event) {
         nombreCompleto: selectedColaborador.nombreCompleto,
         cantidadInvitados: guestCount,
         invitados: invitados,
+        colaboradorAsiste: collaboratorAttends,
         fecha: currentDate.toISOString().split('T')[0],
         hora: currentDate.toTimeString().split(' ')[0],
         lugar: 'Evento de Empresa',
@@ -519,6 +539,7 @@ async function sendRegistration(data) {
             nombreCompleto: data.nombreCompleto,
             cantidadInvitados: data.cantidadInvitados,
             invitados: JSON.stringify(data.invitados),
+            colaboradorAsiste: data.colaboradorAsiste ? 'SI' : 'NO',
             fecha: data.fecha,
             hora: data.hora,
             lugar: data.lugar,
@@ -846,12 +867,18 @@ function showSuccessConfirmation(collaboratorName, guestCount) {
                          guestCount === 1 ? 'con 1 invitado' : 
                          `con ${guestCount} invitados`;
     
+    const colaboradorAsiste = elements.collaboratorAttends.checked;
+    const colaboradorText = colaboradorAsiste ? 
+                         'El colaborador asistirá personalmente' : 
+                         'El colaborador NO asistirá personalmente';
+    
     successContainer.innerHTML = `
         <div class="success-content">
             <div class="success-icon">✅</div>
             <h2>¡Registro Exitoso!</h2>
             <div class="success-details">
                 <p><strong>${collaboratorName}</strong></p>
+                <p>${colaboradorText}</p>
                 <p>Confirmación registrada ${invitadosText}</p>
                 <p class="success-time">Registrado el ${new Date().toLocaleDateString('es-AR')} a las ${new Date().toLocaleTimeString('es-AR')}</p>
             </div>
@@ -950,6 +977,35 @@ function restoreInitialScreen() {
     resetForm();
     
     console.log('🔄 Pantalla inicial restaurada');
+}
+
+// Manejar el botón de cancelar/volver a buscar
+function handleCancel() {
+    console.log('🔙 Volviendo a la búsqueda');
+    
+    // Mostrar la sección de búsqueda
+    elements.searchSection.style.display = 'block';
+    
+    // Ocultar la sección del colaborador seleccionado
+    elements.selectedSection.style.display = 'none';
+    
+    // Limpiar valores
+    selectedColaborador = null;
+    elements.searchInput.value = '';
+    elements.searchResults.innerHTML = '';
+    elements.searchResults.style.display = 'none';
+    elements.guestCount.value = '0';
+    elements.guestsSection.innerHTML = '';
+    
+    // Habilitar el botón de envío (que podría haber sido deshabilitado)
+    if (elements.submitBtn) {
+        elements.submitBtn.disabled = false;
+        elements.submitBtn.textContent = '✅ Confirmar Asistencia';
+        elements.submitBtn.style.opacity = '1';
+    }
+    
+    // Ocultar mensajes
+    hideMessage();
 }
 
 console.log('📁 Archivo cargado - Versión:', CONFIG.version);
