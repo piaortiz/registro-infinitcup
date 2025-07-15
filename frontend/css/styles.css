@@ -25,6 +25,14 @@ body {
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
+    /* Optimizaciones para móviles */
+    -webkit-overflow-scrolling: touch;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
 }
 
 /* Mejoras específicas para móviles */
@@ -33,6 +41,7 @@ body {
         background: #8E97FD;
         padding: 0;
         margin: 0;
+        font-size: 16px; /* Previene zoom automático en iOS */
     }
 }
 
@@ -50,6 +59,23 @@ body {
     position: relative;
 }
 
+/* Optimizaciones para móviles */
+@media (max-width: 768px) {
+    .container {
+        max-width: 100%;
+        height: 100vh;
+        min-height: 100vh;
+    }
+}
+
+@media (max-width: 480px) {
+    .container {
+        max-width: 100%;
+        height: 100dvh; /* Altura dinámica del viewport */
+        min-height: 100dvh;
+    }
+}
+
 /* Nueva cabecera con fondo violeta */
 .header {
     background: linear-gradient(135deg, #8E97FD 0%, #A8B0FF 50%, #C4C9FF 100%);
@@ -63,6 +89,37 @@ body {
     align-items: center;
     justify-content: center;
     overflow: hidden;
+}
+
+/* Optimizaciones para móviles */
+@media (max-width: 768px) {
+    .header {
+        height: 40vh;
+        padding: 0;
+    }
+}
+
+@media (max-width: 480px) {
+    .header {
+        height: 35vh;
+        min-height: 200px;
+    }
+}
+
+/* Ajustes para pantallas muy pequeñas */
+@media (max-width: 360px) {
+    .header {
+        height: 30vh;
+        min-height: 180px;
+    }
+}
+
+/* Orientación horizontal */
+@media (orientation: landscape) and (max-height: 600px) {
+    .header {
+        height: 50vh;
+        min-height: 150px;
+    }
 }
 
 .header-content {
@@ -80,6 +137,32 @@ body {
     font-size: 4rem;
     margin: 0;
     animation: float 3s ease-in-out infinite;
+}
+
+/* Responsive para emoji */
+@media (max-width: 768px) {
+    .star-emoji {
+        font-size: 3.5rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .star-emoji {
+        font-size: 3rem;
+    }
+}
+
+@media (max-width: 360px) {
+    .star-emoji {
+        font-size: 2.5rem;
+    }
+}
+
+/* Orientación horizontal */
+@media (orientation: landscape) and (max-height: 600px) {
+    .star-emoji {
+        font-size: 2.5rem;
+    }
 }
 
 @keyframes float {
@@ -135,11 +218,46 @@ body {
     cursor: pointer;
     transition: all 0.3s ease;
     backdrop-filter: blur(10px);
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+}
+
+/* Responsive para botón de tema */
+@media (max-width: 768px) {
+    .theme-toggle {
+        top: 15px;
+        right: 15px;
+        width: 40px;
+        height: 40px;
+        font-size: 1.1rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .theme-toggle {
+        top: 10px;
+        right: 10px;
+        width: 35px;
+        height: 35px;
+        font-size: 1rem;
+    }
 }
 
 .theme-toggle:hover {
     background: rgba(255, 255, 255, 0.3);
     transform: scale(1.1);
+}
+
+/* Touch devices */
+@media (hover: none) {
+    .theme-toggle:hover {
+        transform: none;
+    }
+    
+    .theme-toggle:active {
+        transform: scale(0.95);
+        background: rgba(255, 255, 255, 0.4);
+    }
 }
 
 /* Área de contenido */
@@ -149,6 +267,27 @@ body {
     background: #ffffff;
     display: flex;
     flex-direction: column;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* Responsive para contenido */
+@media (max-width: 768px) {
+    .content {
+        padding: 20px 15px;
+    }
+}
+
+@media (max-width: 480px) {
+    .content {
+        padding: 15px 12px;
+    }
+}
+
+@media (max-width: 360px) {
+    .content {
+        padding: 12px 10px;
+    }
 }
 
 .content-title {
@@ -158,6 +297,28 @@ body {
     color: #374151;
     margin-bottom: 20px;
     text-align: left;
+}
+
+/* Responsive para título */
+@media (max-width: 768px) {
+    .content-title {
+        font-size: 1.8rem;
+        margin-bottom: 15px;
+    }
+}
+
+@media (max-width: 480px) {
+    .content-title {
+        font-size: 1.6rem;
+        margin-bottom: 12px;
+    }
+}
+
+@media (max-width: 360px) {
+    .content-title {
+        font-size: 1.4rem;
+        margin-bottom: 10px;
+    }
 }
 
 @media (max-width: 768px) {
@@ -179,6 +340,26 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
+    flex-shrink: 0;
+}
+
+/* Responsive para footer */
+@media (max-width: 768px) {
+    .footer {
+        padding: 15px;
+    }
+}
+
+@media (max-width: 480px) {
+    .footer {
+        padding: 12px;
+    }
+}
+
+@media (max-width: 360px) {
+    .footer {
+        padding: 10px;
+    }
 }
 
 .logo-container {
@@ -187,9 +368,35 @@ body {
     gap: 10px;
 }
 
+/* Responsive para logo */
+@media (max-width: 480px) {
+    .logo-container {
+        gap: 8px;
+    }
+}
+
+@media (max-width: 360px) {
+    .logo-container {
+        gap: 6px;
+    }
+}
+
 .logo-icon {
     font-size: 1.5rem;
     color: #8E97FD;
+}
+
+/* Responsive para icono */
+@media (max-width: 480px) {
+    .logo-icon {
+        font-size: 1.3rem;
+    }
+}
+
+@media (max-width: 360px) {
+    .logo-icon {
+        font-size: 1.2rem;
+    }
 }
 
 .logo-text {
@@ -212,17 +419,24 @@ body {
     letter-spacing: 0.3px;
 }
 
-@media (max-width: 768px) {
-    .footer {
-        padding: 15px;
-    }
-    
+/* Responsive para texto del logo */
+@media (max-width: 480px) {
     .logo-title {
         font-size: 0.8rem;
     }
     
     .logo-subtitle {
         font-size: 0.65rem;
+    }
+}
+
+@media (max-width: 360px) {
+    .logo-title {
+        font-size: 0.75rem;
+    }
+    
+    .logo-subtitle {
+        font-size: 0.6rem;
     }
 }
 
@@ -250,6 +464,33 @@ body {
     color: #495057;
     font-family: 'Kanit', sans-serif;
     font-weight: 400;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+}
+
+/* Responsive para input de búsqueda */
+@media (max-width: 768px) {
+    .search-input {
+        padding: 14px 18px;
+        border-radius: 20px;
+        font-size: 16px; /* Previene zoom en iOS */
+    }
+}
+
+@media (max-width: 480px) {
+    .search-input {
+        padding: 12px 16px;
+        border-radius: 18px;
+        font-size: 16px;
+    }
+}
+
+@media (max-width: 360px) {
+    .search-input {
+        padding: 10px 14px;
+        border-radius: 16px;
+        font-size: 16px;
+    }
 }
 
 @media (max-width: 768px) {
@@ -768,6 +1009,51 @@ body {
     transition: all 0.3s ease;
     box-sizing: border-box;
     font-family: 'Kanit', sans-serif;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    min-height: 48px; /* Tamaño mínimo recomendado para touch */
+}
+
+/* Responsive para botones */
+@media (max-width: 768px) {
+    .btn {
+        padding: 14px 20px;
+        border-radius: 10px;
+        font-size: 16px;
+        width: 100%;
+        margin-bottom: 12px;
+        min-height: 44px;
+    }
+}
+
+@media (max-width: 480px) {
+    .btn {
+        padding: 12px 18px;
+        border-radius: 8px;
+        font-size: 15px;
+        min-height: 42px;
+    }
+}
+
+@media (max-width: 360px) {
+    .btn {
+        padding: 10px 16px;
+        font-size: 14px;
+        min-height: 40px;
+    }
+}
+
+/* Touch devices */
+@media (hover: none) {
+    .btn:hover {
+        transform: none;
+        box-shadow: none;
+    }
+    
+    .btn:active {
+        transform: scale(0.98);
+        box-shadow: 0 4px 15px rgba(142, 151, 253, 0.3);
+    }
 }
 
 @media (max-width: 768px) {
@@ -1095,31 +1381,7 @@ body.dark-theme .search-input:disabled {
     }
 }
 
-/* Landscape orientation adjustments */
-@media (orientation: landscape) and (max-height: 500px) {
-    .container {
-        min-height: auto;
-    }
-
-    .header {
-        padding: 12px;
-    }
-
-    .header h1 {
-        font-size: 1.4em;
-        margin-bottom: 5px;
-    }
-
-    .content {
-        padding: 15px;
-    }
-
-    .search-results {
-        max-height: 150px;
-    }
-}
-
-/* Touch-friendly improvements */
+/* Touch devices */
 @media (hover: none) {
     .search-result-item:hover {
         background-color: transparent;
@@ -1496,47 +1758,109 @@ body.dark-theme .loading-spinner {
     20%, 40%, 60%, 80% { transform: translateX(5px); }
 }
 
-/* Aplicar fuente Kanit a títulos y elementos principales */
-h1, h2, h3, h4, h5, h6 {
-    font-family: 'Kanit', sans-serif;
-    font-weight: 600;
-}
+/* ===== OPTIMIZACIONES TÁCTILES PARA MÓVILES ===== */
 
-.btn {
-    font-family: 'Kanit', sans-serif;
-    font-weight: 500;
-}
-
-.search-input {
-    font-family: 'Kanit', sans-serif;
-    font-weight: 400;
-}
-
-.form-input {
-    font-family: 'Kanit', sans-serif;
-    font-weight: 400;
-}
-
-.form-label {
-    font-family: 'Kanit', sans-serif;
-    font-weight: 500;
-}
-
-.message {
-    font-family: 'Kanit', sans-serif;
-    font-weight: 500;
-}
-
+/* Área de toque mínima de 44px según guidelines de Apple */
+.search-input,
+.btn,
+.theme-toggle,
 .search-result-item {
-    font-family: 'Kanit', sans-serif;
+    min-height: 44px;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: rgba(142, 151, 253, 0.1);
 }
 
-.selected-name, .selected-legajo {
-    font-family: 'Kanit', sans-serif;
-    font-weight: 500;
+/* Feedback visual mejorado para touch */
+.search-input:focus {
+    transform: scale(1.02);
+    transition: all 0.2s ease;
 }
 
-.loading {
-    font-family: 'Kanit', sans-serif;
-    font-weight: 500;
+.btn:active {
+    transform: scale(0.98);
+    transition: all 0.1s ease;
+}
+
+.search-result-item:active {
+    background-color: rgba(142, 151, 253, 0.1);
+    transform: scale(0.99);
+}
+
+/* Optimización de scroll para móviles */
+.content {
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+}
+
+.search-results {
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* Mejoras para keyboard navigation en móviles */
+.search-input:focus-visible {
+    outline: 2px solid #8E97FD;
+    outline-offset: 2px;
+}
+
+/* Optimización de fuentes para móviles */
+@media (max-width: 768px) {
+    body {
+        font-size: 16px;
+        line-height: 1.5;
+    }
+    
+    .search-input {
+        font-size: 16px !important; /* Previene zoom en iOS */
+    }
+    
+    .btn {
+        font-size: 16px !important;
+    }
+}
+
+/* Prevenir selección de texto no deseada */
+.header,
+.footer,
+.btn,
+.theme-toggle {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+/* Mejorar rendimiento en animaciones */
+.star-emoji,
+.btn,
+.search-input,
+.theme-toggle {
+    will-change: transform;
+}
+
+/* Optimización de scroll momentum */
+.content,
+.search-results {
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+}
+
+/* Ajustes para pantallas con muesca */
+@supports (padding: max(0px)) {
+    .theme-toggle {
+        top: max(env(safe-area-inset-top), 10px);
+        right: max(env(safe-area-inset-right), 10px);
+    }
+}
+
+/* Feedback háptico simulado con CSS */
+.btn:active,
+.search-result-item:active {
+    animation: hapticFeedback 0.1s ease;
+}
+
+@keyframes hapticFeedback {
+    0% { transform: scale(1); }
+    50% { transform: scale(0.98); }
+    100% { transform: scale(1); }
 }
