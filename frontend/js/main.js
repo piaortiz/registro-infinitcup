@@ -364,25 +364,59 @@ function showAlreadyRegisteredWarning(colaborador, response) {
             'según el registro de colaboradores' : 
             'según el registro de asistencia';
         
+        // Ocultar el formulario, la sección de detalles y la sección del colaborador seleccionado
+        if (elements.registrationForm) {
+            elements.registrationForm.style.display = 'none';
+        }
+        
+        // Ocultar la sección del colaborador seleccionado
+        if (elements.selectedSection) {
+            elements.selectedSection.style.display = 'none';
+        }
+        
+        // Crear un contenedor centrado para los botones y hacer que ocupe toda la pantalla
         message.innerHTML = `
-            <div style="text-align: center;">
-                <strong>⚠️ COLABORADOR YA REGISTRADO</strong><br>
-                <span style="color: #666; font-size: 0.9em;">
-                    ${colaborador.nombreCompleto} ya confirmó su asistencia<br>
-                    para este evento y no puede registrarse nuevamente.<br>
+            <div style="text-align: center; padding: 30px; background-color: white; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin: 20px 0;">
+                <div style="font-size: 60px; margin-bottom: 20px;">⚠️</div>
+                <h2 style="margin: 10px 0; color: #e74c3c; font-size: 1.6em;">COLABORADOR YA REGISTRADO</h2>
+                <p style="margin: 25px 0; font-size: 1.2em; line-height: 1.5;">
+                    <strong>${colaborador.nombreCompleto}</strong> ya confirmó su asistencia<br>
+                    para este evento y no puede registrarse nuevamente.
+                </p>
+                <p style="color: #666; font-size: 0.9em; margin-bottom: 30px;">
                     <small>(${registradoInfo})</small>
-                </span>
+                </p>
+                <div style="display: flex; justify-content: center; gap: 15px; margin-top: 30px; flex-wrap: wrap;">
+                    <button id="newSearchBtn" class="btn btn-primary" style="padding: 12px 20px; font-size: 1.1em;">
+                        🔍 Buscar Otro Colaborador
+                    </button>
+                    <button id="closeAppBtn" class="btn btn-secondary" style="padding: 12px 20px; font-size: 1.1em;">
+                        🚪 Cerrar Aplicación
+                    </button>
+                </div>
             </div>
         `;
+        
         message.className = 'message warning';
         message.style.display = 'block';
+        message.style.maxWidth = '90%';
+        message.style.margin = '20px auto';
+        message.style.position = 'relative';
+        message.style.zIndex = '1000';
         
-        // Deshabilitar el botón de envío
-        if (elements.submitBtn) {
-            elements.submitBtn.disabled = true;
-            elements.submitBtn.textContent = '❌ Ya Registrado';
-            elements.submitBtn.style.opacity = '0.6';
-        }
+        // Agregar event listeners para los botones
+        setTimeout(() => {
+            const newSearchBtn = document.getElementById('newSearchBtn');
+            const closeAppBtn = document.getElementById('closeAppBtn');
+            
+            if (newSearchBtn) {
+                newSearchBtn.addEventListener('click', handleCancel);
+            }
+            
+            if (closeAppBtn) {
+                closeAppBtn.addEventListener('click', closePage);
+            }
+        }, 100);
     }
 }
 
@@ -942,70 +976,111 @@ function showErrorConfirmation(errorMessage) {
 }
 
 function closePage() {
-    // Redirigir a Google
-    console.log('🚪 Cerrando aplicación - Redirigiendo a Google');
-    window.location.href = 'https://www.google.com';
+    // Mostrar un mensaje de despedida
+    const body = document.body;
+    const originalContent = body.innerHTML;
+    
+    body.innerHTML = `
+        <div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+                    display: flex; justify-content: center; align-items: center; 
+                    background-color: #f8f9fa; flex-direction: column; text-align: center;">
+            <div style="font-size: 72px; margin-bottom: 20px;">👋</div>
+            <h1>¡Gracias por utilizar el sistema!</h1>
+            <p style="margin: 15px 0; font-size: 1.2em;">La aplicación se cerrará en 3 segundos...</p>
+        </div>
+    `;
+    
+    // Esperar 3 segundos y luego cerrar la ventana o redirigir
+    setTimeout(() => {
+        try {
+            window.close(); // Intenta cerrar la ventana (puede no funcionar en todos los navegadores)
+        } catch (e) {
+            // Si no se puede cerrar, restauramos el contenido original
+            body.innerHTML = originalContent;
+            alert('Por favor, cierre esta ventana manualmente.');
+        }
+    }, 3000);
 }
 
+// Función que falta para restaurar el formulario
 function restoreForm() {
-    // Ocultar confirmación de error
     const errorContainer = document.getElementById('errorConfirmation');
     if (errorContainer) {
         errorContainer.style.display = 'none';
     }
     
-    // Restaurar formulario
-    restoreInitialScreen();
-    
-    console.log('🔄 Restaurando formulario');
-}
-
-function restoreInitialScreen() {
-    // Mostrar secciones principales
+    // Restaurar secciones principales
     const searchSection = document.querySelector('.search-section');
     const selectedSection = elements.selectedSection;
     
-    if (searchSection) {
-        searchSection.style.display = 'block';
-    }
-    
-    if (selectedSection && selectedColaborador) {
+    if (selectedSection) {
         selectedSection.style.display = 'block';
     }
     
-    // Resetear formulario
-    resetForm();
+    if (elements.registrationForm) {
+        elements.registrationForm.style.display = 'block';
+    }
     
-    console.log('🔄 Pantalla inicial restaurada');
-}
-
-// Manejar el botón de cancelar/volver a buscar
-function handleCancel() {
-    console.log('🔙 Volviendo a la búsqueda');
-    
-    // Mostrar la sección de búsqueda
-    elements.searchSection.style.display = 'block';
-    
-    // Ocultar la sección del colaborador seleccionado
-    elements.selectedSection.style.display = 'none';
-    
-    // Limpiar valores
-    selectedColaborador = null;
-    elements.searchInput.value = '';
-    elements.searchResults.innerHTML = '';
-    elements.searchResults.style.display = 'none';
-    elements.guestCount.value = '0';
-    elements.guestsSection.innerHTML = '';
-    
-    // Habilitar el botón de envío (que podría haber sido deshabilitado)
+    // Restaurar botón de envío
     if (elements.submitBtn) {
         elements.submitBtn.disabled = false;
         elements.submitBtn.textContent = '✅ Confirmar Asistencia';
         elements.submitBtn.style.opacity = '1';
     }
     
-    // Ocultar mensajes
-    hideMessage();
+    console.log('🔄 Formulario restaurado para reintento');
 }
 
-console.log('📁 Archivo cargado - Versión:', CONFIG.version);
+// Función para cancelar y volver a buscar
+function handleCancel() {
+    // Ocultar sección de seleccionado y mostrar búsqueda
+    if (elements.selectedSection) {
+        elements.selectedSection.style.display = 'none';
+    }
+    
+    if (elements.searchSection) {
+        elements.searchSection.style.display = 'block';
+    }
+    
+    // Restablecer el formulario de registro a su estado visible
+    if (elements.registrationForm) {
+        elements.registrationForm.style.display = 'block';
+        
+        // Restablecer también el estado del botón de envío
+        if (elements.submitBtn) {
+            elements.submitBtn.disabled = false;
+            elements.submitBtn.textContent = '✅ Confirmar Asistencia';
+            elements.submitBtn.style.opacity = '1';
+        }
+    }
+    
+    // Limpiar y restablecer el campo de invitados
+    if (elements.guestCount) {
+        elements.guestCount.value = '0';
+    }
+    
+    if (elements.guestsSection) {
+        elements.guestsSection.innerHTML = '';
+    }
+    
+    // Restablecer el checkbox de asistencia del colaborador
+    if (elements.collaboratorAttends) {
+        elements.collaboratorAttends.checked = true;
+    }
+    
+    // Restablecer mensaje
+    if (elements.message) {
+        elements.message.style.display = 'none';
+    }
+    
+    // Limpiar búsqueda
+    if (elements.searchInput) {
+        elements.searchInput.value = '';
+        elements.searchInput.focus();
+    }
+    
+    // Reiniciar estado
+    selectedColaborador = null;
+    
+    console.log('🔍 Volviendo a búsqueda');
+}
