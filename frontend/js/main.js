@@ -529,9 +529,12 @@ function generateGuestFields(count) {
         const div = document.createElement('div');
         div.className = 'guest-item';
         div.innerHTML = `
-            <h4>👤 Invitado ${i}</h4>
-            <input type="text" id="guestName${i}" placeholder="Nombre completo" required>
-            <input type="text" id="guestVinculo${i}" placeholder="Relación (ej: esposo/a)" required>
+            <h4 class="guest-title">Invitado ${i}</h4>
+            <input type="text" id="guestName${i}" placeholder="Nombre del invitado" required class="guest-input-full">
+            <div class="guest-input-row">
+                <input type="text" id="guestVinculo${i}" placeholder="Vínculo" required class="guest-input-half">
+                <input type="number" id="guestAge${i}" placeholder="Edad" required class="guest-input-half" min="1" max="120">
+            </div>
         `;
         elements.guestsSection.appendChild(div);
     }
@@ -630,6 +633,7 @@ async function handleSubmit(event) {
     for (let i = 1; i <= guestCount; i++) {
         const nameInput = document.getElementById(`guestName${i}`);
         const vinculoInput = document.getElementById(`guestVinculo${i}`);
+        const ageInput = document.getElementById(`guestAge${i}`);
         
         if (!nameInput || !nameInput.value.trim()) {
             showMessage(`❌ Falta nombre del invitado ${i}`, 'error');
@@ -637,13 +641,25 @@ async function handleSubmit(event) {
         }
         
         if (!vinculoInput || !vinculoInput.value.trim()) {
-            showMessage(`❌ Falta relación del invitado ${i}`, 'error');
+            showMessage(`❌ Falta vínculo del invitado ${i}`, 'error');
+            return;
+        }
+        
+        if (!ageInput || !ageInput.value.trim()) {
+            showMessage(`❌ Falta edad del invitado ${i}`, 'error');
+            return;
+        }
+        
+        const age = parseInt(ageInput.value);
+        if (isNaN(age) || age < 1 || age > 120) {
+            showMessage(`❌ Edad inválida para el invitado ${i}`, 'error');
             return;
         }
         
         invitados.push({
             nombre: nameInput.value.trim(),
-            vinculo: vinculoInput.value.trim()
+            vinculo: vinculoInput.value.trim(),
+            edad: age
         });
     }
     
@@ -1212,9 +1228,9 @@ function handleCancel() {
         elements.guestsSection.innerHTML = '';
     }
     
-    // Restablecer el checkbox de asistencia del colaborador
+    // Restablecer el checkbox de asistencia del colaborador (deseleccionado por defecto)
     if (elements.collaboratorAttends) {
-        elements.collaboratorAttends.checked = true;
+        elements.collaboratorAttends.checked = false;
     }
     
     // Restablecer mensaje

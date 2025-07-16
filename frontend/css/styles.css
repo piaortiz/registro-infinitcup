@@ -1094,63 +1094,150 @@ body {
     }
 }
 
+/* Estilos mejorados para campos de invitados */
 .guest-item {
     background: white;
     border: 1px solid #e0e0e0;
-    border-radius: 10px;
-    padding: 15px;
-    margin-bottom: 12px;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 15px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
 @media (max-width: 768px) {
     .guest-item {
-        border-radius: 8px;
-        padding: 12px;
-        margin-bottom: 10px;
+        border-radius: 10px;
+        padding: 16px;
+        margin-bottom: 12px;
         border: 1px solid #dee2e6;
         box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
     }
 }
 
-.guest-item input {
+/* Título del invitado */
+.guest-title {
+    font-family: 'Kanit', sans-serif;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #495057;
+    margin-bottom: 15px;
+    margin-top: 0;
+    text-align: left;
+}
+
+@media (max-width: 768px) {
+    .guest-title {
+        font-size: 1rem;
+        margin-bottom: 12px;
+    }
+}
+
+/* Campo de nombre completo (ancho completo) */
+.guest-input-full {
     width: 100%;
-    padding: 12px;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    font-size: 15px;
-    margin-bottom: 10px;
+    padding: 14px;
+    border: 2px solid #e0e0e0;
+    border-radius: 10px;
+    font-size: 16px;
+    margin-bottom: 12px;
     background: #ffffff;
     -webkit-appearance: none;
     -moz-appearance: none;
     appearance: none;
     box-sizing: border-box;
+    font-family: 'Kanit', sans-serif;
+    font-weight: 400;
+    transition: all 0.3s ease;
 }
 
 @media (max-width: 768px) {
-    .guest-item input {
-        padding: 10px;
-        border-radius: 6px;
+    .guest-input-full {
+        padding: 12px;
+        border-radius: 8px;
         font-size: 16px;
         border: 1px solid #ced4da;
     }
 }
 
-.guest-item input:last-child {
+/* Contenedor para los campos en fila */
+.guest-input-row {
+    display: flex;
+    gap: 12px;
     margin-bottom: 0;
 }
 
-.guest-item input:focus {
-    outline: none;
-    border-color: #00AC99;
-    background: white;
-    box-shadow: 0 0 0 2px rgba(40, 167, 69, 0.1);
+@media (max-width: 768px) {
+    .guest-input-row {
+        gap: 10px;
+    }
+}
+
+/* Campos de vínculo y edad (media anchura) */
+.guest-input-half {
+    flex: 1;
+    padding: 14px;
+    border: 2px solid #e0e0e0;
+    border-radius: 10px;
+    font-size: 16px;
+    background: #ffffff;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    box-sizing: border-box;
+    font-family: 'Kanit', sans-serif;
+    font-weight: 400;
+    transition: all 0.3s ease;
 }
 
 @media (max-width: 768px) {
-    .guest-item input:focus {
+    .guest-input-half {
+        padding: 12px;
+        border-radius: 8px;
+        font-size: 16px;
+        border: 1px solid #ced4da;
+    }
+}
+
+/* Estados focus para todos los inputs de invitados */
+.guest-input-full:focus,
+.guest-input-half:focus {
+    outline: none;
+    border-color: #00AC99;
+    background: white;
+    box-shadow: 0 0 0 3px rgba(0, 172, 153, 0.1);
+}
+
+@media (max-width: 768px) {
+    .guest-input-full:focus,
+    .guest-input-half:focus {
         border-color: #00C4A7;
-        box-shadow: 0 0 0 1px rgba(32, 201, 151, 0.1);
+        box-shadow: 0 0 0 2px rgba(0, 172, 153, 0.1);
+    }
+}
+
+/* Placeholder styling */
+.guest-input-full::placeholder,
+.guest-input-half::placeholder {
+    color: #9CA3AF;
+    font-size: 0.95rem;
+}
+
+@media (max-width: 768px) {
+    .guest-input-full::placeholder,
+    .guest-input-half::placeholder {
+        font-size: 0.9rem;
+    }
+}
+
+/* Responsive para pantallas muy pequeñas - campos en columna solo en móviles muy pequeños */
+@media (max-width: 360px) {
+    .guest-input-row {
+        flex-direction: column;
+        gap: 8px;
+    }
+    
+    .guest-input-half {
+        width: 100%;
     }
 }
 

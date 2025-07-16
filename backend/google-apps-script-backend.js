@@ -546,7 +546,8 @@ function registerAttendance(data) {
         data.nombreCompleto,         // NombreCompleto
         'Sí',                        // Confirmado
         data.nombreCompleto,         // InvitadoNombre (nombre del colaborador para sorteo)
-        'Colaborador'                // InvitadoVinculo (identificar que es el colaborador)
+        'Colaborador',               // InvitadoVinculo (identificar que es el colaborador)
+        null                         // InvitadoEdad (null para el colaborador)
       ];
       
       console.log('📝 Insertando fila del colaborador:', mainRowData);
@@ -566,7 +567,8 @@ function registerAttendance(data) {
           data.nombreCompleto,      // NombreCompleto (mismo que el colaborador)
           'Sí',                     // Confirmado
           invitado.nombre,          // InvitadoNombre
-          invitado.vinculo          // InvitadoVinculo
+          invitado.vinculo,         // InvitadoVinculo
+          invitado.edad             // InvitadoEdad
         ];
         
         console.log(`📝 Insertando fila del invitado ${index + 1}:`, guestRowData);
@@ -602,7 +604,8 @@ function createRegistrationSheet() {
       'NombreCompleto',
       'Confirmado',
       'InvitadoNombre',
-      'InvitadoVinculo'
+      'InvitadoVinculo',
+      'InvitadoEdad'
     ];
     
     sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
@@ -620,6 +623,7 @@ function createRegistrationSheet() {
     sheet.setColumnWidth(4, 100); // Confirmado
     sheet.setColumnWidth(5, 150); // InvitadoNombre
     sheet.setColumnWidth(6, 120); // InvitadoVinculo
+    sheet.setColumnWidth(7, 80);  // InvitadoEdad
     
     return sheet;
     
