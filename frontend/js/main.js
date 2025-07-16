@@ -429,11 +429,6 @@ async function checkRegistrationStatus(legajo) {
 function showAlreadyRegisteredWarning(colaborador, response) {
     const message = elements.message;
     if (message) {
-        // Determinar origen de la información
-        const registradoInfo = response && response.yaRegistradoEnHoja ? 
-            'según el registro de colaboradores' : 
-            'según el registro de asistencia';
-        
         // Ocultar el formulario, la sección de detalles y la sección del colaborador seleccionado
         if (elements.registrationForm) {
             elements.registrationForm.style.display = 'none';
@@ -453,15 +448,12 @@ function showAlreadyRegisteredWarning(colaborador, response) {
                     <strong>${colaborador.nombreCompleto}</strong> ya confirmó su asistencia<br>
                     para este evento y no puede registrarse nuevamente.
                 </p>
-                <p style="color: #666; font-size: 0.9em; margin-bottom: 30px;">
-                    <small>(${registradoInfo})</small>
-                </p>
                 <div style="display: flex; justify-content: center; gap: 15px; margin-top: 30px; flex-wrap: wrap;">
-                    <button id="newSearchBtn" class="btn btn-primary" style="padding: 12px 20px; font-size: 1.1em;">
-                        🔍 Buscar Otro Colaborador
+                    <button id="newSearchBtn" class="btn btn-primary">
+                        Buscar Otro Colaborador
                     </button>
-                    <button id="closeAppBtn" class="btn btn-secondary" style="padding: 12px 20px; font-size: 1.1em;">
-                        🚪 Cerrar Aplicación
+                    <button id="closeAppBtn" class="btn btn-secondary">
+                        Cerrar Aplicación
                     </button>
                 </div>
             </div>
@@ -1071,7 +1063,7 @@ function showSuccessConfirmation(collaboratorName, guestCount) {
                 <p><strong>Colaborador:</strong> ${collaboratorName}</p>
                 <p><strong>Invitados:</strong> ${invitadosText}</p>
                 <p style="color: #059669; font-weight: 600; font-size: 1.2rem; margin: 15px 0;">
-                    🎊 ¡YA ESTÁS PARTICIPANDO POR LOS SORTEOS!
+                    ¡YA ESTÁS PARTICIPANDO POR LOS SORTEOS!
                 </p>
                 <p class="success-time">
                     Registrado el ${fechaFormateada} a las ${horaFormateada}
