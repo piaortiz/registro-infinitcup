@@ -35,8 +35,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         guestsSection: document.getElementById('guestsSection'),
         submitBtn: document.getElementById('submitBtn'),
         cancelBtn: document.getElementById('cancelBtn'),
-        message: document.getElementById('message'),
-        loading: document.getElementById('loading')
+        message: document.getElementById('message')
     };
     
     // Cargar colaboradores
@@ -46,6 +45,9 @@ document.addEventListener('DOMContentLoaded', async function() {
         // Solo continuar si la carga fue exitosa
         // Event listeners
         setupEventListeners();
+        
+        // Configurar controles de cantidad de invitados
+        setupGuestCountControls();
         
         // Asegurar estado inicial correcto
         initializeInitialState();
@@ -496,7 +498,7 @@ function hideMessage() {
         // Habilitar el botón de envío
         if (elements.submitBtn) {
             elements.submitBtn.disabled = false;
-            elements.submitBtn.textContent = '✅ Confirmar Asistencia';
+            elements.submitBtn.textContent = 'CONFIRMAR';
             elements.submitBtn.style.opacity = '1';
         }
     }
@@ -533,6 +535,73 @@ function generateGuestFields(count) {
         `;
         elements.guestsSection.appendChild(div);
     }
+}
+
+// Funcionalidad para los botones de incremento/decremento de invitados
+function setupGuestCountControls() {
+    const guestCountInput = document.getElementById('guestCount');
+    const incrementBtn = document.getElementById('incrementBtn');
+    const decrementBtn = document.getElementById('decrementBtn');
+    
+    if (!guestCountInput || !incrementBtn || !decrementBtn) {
+        console.warn('❌ Elementos de control de invitados no encontrados');
+        return;
+    }
+    
+    // Verificar si ya se configuraron los event listeners
+    if (incrementBtn.hasAttribute('data-listeners-added')) {
+        console.log('⚠️ Event listeners ya configurados, saltando...');
+        return;
+    }
+    
+    // Función para actualizar el estado de los botones
+    function updateButtonStates() {
+        const currentValue = parseInt(guestCountInput.value) || 0;
+        decrementBtn.disabled = currentValue <= 0;
+        incrementBtn.disabled = currentValue >= 10;
+    }
+    
+    // Incrementar cantidad
+    const incrementHandler = function() {
+        const currentValue = parseInt(guestCountInput.value) || 0;
+        if (currentValue < 10) {
+            guestCountInput.value = currentValue + 1;
+            updateButtonStates();
+            updateGuestsSection();
+        }
+    };
+    
+    // Decrementar cantidad
+    const decrementHandler = function() {
+        const currentValue = parseInt(guestCountInput.value) || 0;
+        if (currentValue > 0) {
+            guestCountInput.value = currentValue - 1;
+            updateButtonStates();
+            updateGuestsSection();
+        }
+    };
+    
+    // Agregar event listeners
+    incrementBtn.addEventListener('click', incrementHandler);
+    decrementBtn.addEventListener('click', decrementHandler);
+    
+    // Marcar que los event listeners ya fueron agregados
+    incrementBtn.setAttribute('data-listeners-added', 'true');
+    decrementBtn.setAttribute('data-listeners-added', 'true');
+    
+    // Actualizar estados iniciales
+    updateButtonStates();
+    
+    // Escuchar cambios en el input para actualizar botones
+    guestCountInput.addEventListener('input', updateButtonStates);
+    
+    console.log('✅ Controles de cantidad de invitados configurados correctamente');
+}
+
+// Mostrar sección de invitados actualizada
+function updateGuestsSection() {
+    const count = parseInt(elements.guestCount.value) || 0;
+    generateGuestFields(count);
 }
 
 // Manejar envío
@@ -693,14 +762,14 @@ function showMessage(text, type = 'info') {
             // Para advertencias (ya registrado), deshabilitar botón
             if (elements.submitBtn) {
                 elements.submitBtn.disabled = true;
-                elements.submitBtn.textContent = '❌ Ya Registrado';
+                elements.submitBtn.textContent = 'YA REGISTRADO';
                 elements.submitBtn.style.opacity = '0.6';
             }
         } else if (type === 'info') {
             // Para mensajes informativos, mantener botón habilitado
             if (elements.submitBtn) {
                 elements.submitBtn.disabled = false;
-                elements.submitBtn.textContent = '✅ Confirmar Asistencia';
+                elements.submitBtn.textContent = 'CONFIRMAR';
                 elements.submitBtn.style.opacity = '1';
             }
         }
@@ -710,12 +779,6 @@ function showMessage(text, type = 'info') {
                 elements.message.style.display = 'none';
             }, 5000);
         }
-    }
-}
-
-function showLoading(show) {
-    if (elements.loading) {
-        elements.loading.style.display = show ? 'block' : 'none';
     }
 }
 
@@ -1092,7 +1155,7 @@ function restoreForm() {
     // Restaurar botón de envío
     if (elements.submitBtn) {
         elements.submitBtn.disabled = false;
-        elements.submitBtn.textContent = '✅ Confirmar Asistencia';
+        elements.submitBtn.textContent = 'CONFIRMAR';
         elements.submitBtn.style.opacity = '1';
     }
     
@@ -1135,7 +1198,7 @@ function handleCancel() {
         // Restablecer también el estado del botón de envío
         if (elements.submitBtn) {
             elements.submitBtn.disabled = false;
-            elements.submitBtn.textContent = '✅ Confirmar Asistencia';
+            elements.submitBtn.textContent = 'CONFIRMAR';
             elements.submitBtn.style.opacity = '1';
         }
     }

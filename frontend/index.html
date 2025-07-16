@@ -13,7 +13,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@200;300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/styles.css">
 </head>
-<body style="margin: 0; padding: 0; background: #00AC99;">
+<body style="margin: 0; padding: 0; background: #FFFFFF;">
     <div class="container">
         <!-- Logo móvil (se muestra cuando hay colaborador seleccionado) -->
         <div id="topLogo" class="top-logo" style="display: none;">
@@ -81,38 +81,42 @@
                         
                         <div class="form-group">
                             <label class="form-label" for="guestCount">
-                                👥 Cantidad de invitados que trae:
+                                Cantidad de Invitados
                             </label>
-                            <input 
-                                type="number" 
-                                id="guestCount" 
-                                class="form-input" 
-                                min="0" 
-                                max="10" 
-                                value="0"
-                                required
-                                inputmode="numeric"
-                            >
-                            <small style="color: #666; font-size: 0.8em;">Máximo 10 invitados</small>
+                            <div class="guests-count-container">
+                                <input 
+                                    type="number" 
+                                    id="guestCount" 
+                                    min="0" 
+                                    max="10" 
+                                    value="1"
+                                    required
+                                    inputmode="numeric"
+                                    readonly
+                                >
+                                <div class="guest-count-controls">
+                                    <button type="button" class="guest-count-btn increment" id="incrementBtn">
+                                        <span>▲</span>
+                                    </button>
+                                    <button type="button" class="guest-count-btn decrement" id="decrementBtn">
+                                        <span>▼</span>
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                         
                         <div id="guestsSection" class="guests-section"></div>
                         
                         <div class="form-actions">
                             <button type="submit" class="btn btn-primary" id="submitBtn">
-                                ✅ Confirmar Asistencia
+                                CONFIRMAR
                             </button>
                             
                             <button type="button" class="btn btn-secondary" id="cancelBtn">
-                                ← Volver a Buscar
+                                VOLVER A BUSCAR
                             </button>
                         </div>
                     </form>
-                </div>
-                
-                <!-- Indicador de carga -->
-                <div id="loading" class="loading">
-                    📡 Procesando registro...
                 </div>
             </div>
             
