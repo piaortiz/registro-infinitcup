@@ -47,6 +47,9 @@ document.addEventListener('DOMContentLoaded', async function() {
         // Event listeners
         setupEventListeners();
         
+        // Asegurar estado inicial correcto
+        initializeInitialState();
+        
         console.log('✅ Aplicación inicializada correctamente');
     } catch (error) {
         console.error('❌ Error inicializando aplicación:', error);
@@ -201,6 +204,53 @@ function setupEventListeners() {
     }
 }
 
+// Función para inicializar el estado inicial correcto
+function initializeInitialState() {
+    // Asegurar que la sección de colaborador seleccionado esté oculta
+    if (elements.selectedSection) {
+        elements.selectedSection.style.display = 'none';
+    }
+    
+    // Asegurar que la sección de búsqueda esté visible
+    if (elements.searchSection) {
+        elements.searchSection.style.display = 'block';
+    }
+    
+    // Asegurar que el header esté visible
+    const header = document.querySelector('.header');
+    if (header) {
+        header.style.display = 'flex';
+    }
+    
+    // Asegurar que el footer esté visible
+    const footer = document.querySelector('.footer');
+    if (footer) {
+        footer.style.display = 'flex';
+    }
+    
+    // Asegurar que el logo móvil esté oculto
+    const topLogo = document.getElementById('topLogo');
+    if (topLogo) {
+        topLogo.style.display = 'none';
+    }
+    
+    // Limpiar resultados de búsqueda
+    if (elements.searchResults) {
+        elements.searchResults.style.display = 'none';
+        elements.searchResults.innerHTML = '';
+    }
+    
+    // Limpiar input de búsqueda
+    if (elements.searchInput) {
+        elements.searchInput.value = '';
+    }
+    
+    // Reiniciar estado
+    selectedColaborador = null;
+    
+    console.log('✅ Estado inicial configurado correctamente');
+}
+
 // Búsqueda optimizada con índices
 function handleSearch(event) {
     const query = event.target.value.trim().toLowerCase();
@@ -262,9 +312,27 @@ async function selectColaborador(colaborador) {
     elements.selectedName.textContent = colaborador.nombreCompleto;
     elements.selectedLegajo.textContent = `Legajo: ${colaborador.legajo}`;
     
+    // Ocultar header para pantalla más limpia
+    const header = document.querySelector('.header');
+    if (header) {
+        header.style.display = 'none';
+    }
+    
+    // Ocultar footer cuando hay colaborador seleccionado
+    const footer = document.querySelector('.footer');
+    if (footer) {
+        footer.style.display = 'none';
+    }
+    
+    // Mostrar logo móvil en la parte superior
+    const topLogo = document.getElementById('topLogo');
+    if (topLogo) {
+        topLogo.style.display = 'flex';
+    }
+    
     // Ocultar sección de búsqueda y mostrar sección de selección
     elements.searchSection.style.display = 'none';
-    elements.selectedSection.style.display = 'block';
+    elements.selectedSection.style.display = 'flex';
     elements.searchResults.style.display = 'none';
     elements.searchInput.value = '';
     
@@ -729,7 +797,7 @@ function showInitialLoading() {
         loadingContainer.innerHTML = `
             <div class="loading-content">
                 <div class="loading-spinner"></div>
-                <h2>📡 Cargando Base de Datos</h2>
+                <h2>Cargando Base de Datos</h2>
                 <p>Obteniendo lista de colaboradores...</p>
             </div>
         `;
@@ -1033,6 +1101,24 @@ function restoreForm() {
 
 // Función para cancelar y volver a buscar
 function handleCancel() {
+    // Mostrar header nuevamente
+    const header = document.querySelector('.header');
+    if (header) {
+        header.style.display = 'flex';
+    }
+    
+    // Mostrar footer nuevamente
+    const footer = document.querySelector('.footer');
+    if (footer) {
+        footer.style.display = 'flex';
+    }
+    
+    // Ocultar logo móvil
+    const topLogo = document.getElementById('topLogo');
+    if (topLogo) {
+        topLogo.style.display = 'none';
+    }
+    
     // Ocultar sección de seleccionado y mostrar búsqueda
     if (elements.selectedSection) {
         elements.selectedSection.style.display = 'none';

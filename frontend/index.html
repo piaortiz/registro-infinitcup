@@ -6,115 +6,120 @@
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <meta name="theme-color" content="#8E97FD">
+    <meta name="theme-color" content="#00AC99">
     <title>Registro de Asistencia - Casino Magic</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@200;300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/styles.css">
 </head>
-<body style="margin: 0; padding: 0; background: #8E97FD;">
+<body style="margin: 0; padding: 0; background: #00AC99;">
     <div class="container">
-        <!-- Cabecera con fondo violeta -->
-        <div class="header">
-            <div class="header-content">
-                <div class="star-emoji">🤩</div>
+        <!-- Logo móvil (se muestra cuando hay colaborador seleccionado) -->
+        <div id="topLogo" class="top-logo" style="display: none;">
+            <div class="logo-container">
+                <img src="img/logo_casino.png" alt="Casino Magic Logo" class="logo-image">
             </div>
         </div>
         
-        <!-- Área de contenido -->
-        <div class="content">
-            <!-- Mensajes de estado -->
-            <div id="message" class="message"></div>
-            
-            <!-- Título y búsqueda -->
-            <div class="search-section">
-                <h2 class="content-title">Buscar colaborador</h2>
-                <div class="search-input-container">
-                    <input 
-                        type="text" 
-                        id="searchInput" 
-                        class="search-input" 
-                        placeholder="Ingresa nombre o legajo del colaborador"
-                        autocomplete="off"
-                        inputmode="text"
-                    >
-                </div>
-                <div id="searchResults" class="search-results"></div>
+        <!-- Cabecera con fondo turquesa -->
+        <div class="header">
+            <div class="header-content">
+                <img src="img/diainfancias-01.png" alt="Día de las Infancias" class="header-image">
             </div>
-            
-            <!-- Sección de colaborador seleccionado -->
-            <div id="selectedSection" class="selected-section">
-                <div class="selected-header">
-                    <h2>✅ Empleado Seleccionado</h2>
-                    <div class="selected-info">
-                        <div id="selectedName" class="selected-name"></div>
-                        <div id="selectedLegajo" class="selected-legajo"></div>
+        </div>
+        
+        <!-- Contenedor del contenido -->
+        <div class="content-wrapper">
+            <!-- Área de contenido -->
+            <div class="content">
+                <!-- Mensajes de estado -->
+                <div id="message" class="message"></div>
+                
+                <!-- Título y búsqueda -->
+                <div class="search-section">
+                    <h2 class="content-title">Buscar colaborador</h2>
+                    <div class="search-input-container">
+                        <input 
+                            type="text" 
+                            id="searchInput" 
+                            class="search-input" 
+                            placeholder="Ingresa nombre o legajo del colaborador"
+                            autocomplete="off"
+                            inputmode="text"
+                        >
                     </div>
+                    <div id="searchResults" class="search-results"></div>
                 </div>
                 
-                <!-- Formulario de registro -->
-                <form id="registrationForm">
-                    <div class="form-group">
-                        <div class="checkbox-container" style="margin-bottom: 15px;">
-                            <input 
-                                type="checkbox" 
-                                id="collaboratorAttends" 
-                                checked
-                            >
-                            <label for="collaboratorAttends" style="cursor: pointer; font-weight: 500;">
-                                ✅ El colaborador asistirá personalmente al evento
-                            </label>
-                            <small style="display: block; color: #666; font-size: 0.8em; margin-top: 5px;">
-                                Desmarca esta opción si solo registras invitados a nombre del colaborador
-                            </small>
+                <!-- Sección de colaborador seleccionado -->
+                <div id="selectedSection" class="selected-section" style="display: none;">
+                    <!-- Tarjeta compacta del colaborador -->
+                    <div class="selected-card">
+                        <div class="selected-emoji">🤩</div>
+                        <div class="selected-details">
+                            <div id="selectedName" class="selected-name"></div>
+                            <div id="selectedLegajo" class="selected-legajo"></div>
                         </div>
                     </div>
                     
-                    <div class="form-group">
-                        <label class="form-label" for="guestCount">
-                            👥 Cantidad de invitados que trae:
-                        </label>
-                        <input 
-                            type="number" 
-                            id="guestCount" 
-                            class="form-input" 
-                            min="0" 
-                            max="10" 
-                            value="0"
-                            required
-                            inputmode="numeric"
-                        >
-                        <small style="color: #666; font-size: 0.8em;">Máximo 10 invitados</small>
-                    </div>
-                    
-                    <div id="guestsSection" class="guests-section"></div>
-                    
-                    <div class="form-actions">
-                        <button type="submit" class="btn btn-primary" id="submitBtn">
-                            ✅ Confirmar Asistencia
-                        </button>
+                    <!-- Formulario de registro -->
+                    <form id="registrationForm">
+                        <div class="form-group">
+                            <div class="checkbox-container-modern">
+                                <input 
+                                    type="checkbox" 
+                                    id="collaboratorAttends" 
+                                    checked
+                                    class="checkbox-modern"
+                                >
+                                <label for="collaboratorAttends" class="checkbox-label-modern">
+                                    Seleccionar si el colaborador está en el evento.
+                                </label>
+                            </div>
+                        </div>
                         
-                        <button type="button" class="btn btn-secondary" id="cancelBtn">
-                            ← Volver a Buscar
-                        </button>
-                    </div>
-                </form>
+                        <div class="form-group">
+                            <label class="form-label" for="guestCount">
+                                👥 Cantidad de invitados que trae:
+                            </label>
+                            <input 
+                                type="number" 
+                                id="guestCount" 
+                                class="form-input" 
+                                min="0" 
+                                max="10" 
+                                value="0"
+                                required
+                                inputmode="numeric"
+                            >
+                            <small style="color: #666; font-size: 0.8em;">Máximo 10 invitados</small>
+                        </div>
+                        
+                        <div id="guestsSection" class="guests-section"></div>
+                        
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary" id="submitBtn">
+                                ✅ Confirmar Asistencia
+                            </button>
+                            
+                            <button type="button" class="btn btn-secondary" id="cancelBtn">
+                                ← Volver a Buscar
+                            </button>
+                        </div>
+                    </form>
+                </div>
+                
+                <!-- Indicador de carga -->
+                <div id="loading" class="loading">
+                    📡 Procesando registro...
+                </div>
             </div>
             
-            <!-- Indicador de carga -->
-            <div id="loading" class="loading">
-                📡 Procesando registro...
-            </div>
-        </div>
-        
-        <!-- Footer con logo -->
-        <div class="footer">
-            <div class="logo-container">
-                <div class="logo-icon">✨</div>
-                <div class="logo-text">
-                    <div class="logo-title">CASINO MAGIC</div>
-                    <div class="logo-subtitle">HOTEL & CASINO</div>
+            <!-- Footer con logo -->
+            <div class="footer">
+                <div class="logo-container">
+                    <img src="img/logo_casino.png" alt="Casino Magic Logo" class="logo-image">
                 </div>
             </div>
         </div>
