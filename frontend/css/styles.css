@@ -658,6 +658,11 @@ body {
     }
 }
 
+/* Ocultar legajo en resultados de búsqueda para ahorrar espacio */
+.result-legajo {
+    display: none !important;
+}
+
 .result-legajo {
     color: #666;
     font-size: 0.85em;
@@ -2090,6 +2095,11 @@ body {
         font-size: 0.9em;
         margin-bottom: 3px;
     }
+}
+
+/* Ocultar legajo en resultados de búsqueda para ahorrar espacio */
+.result-legajo {
+    display: none !important;
 }
 
 .result-legajo {
