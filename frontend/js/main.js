@@ -1010,11 +1010,14 @@ function showSubmissionLoading() {
             <div class="loading-content">
                 <div class="loading-spinner"></div>
                 <h2>📤 Enviando Registro</h2>
-                <p>Por favor espera mientras procesamos tu confirmación...</p>
+                <p>Procesando tu confirmación de asistencia...</p>
+                <p style="margin-top: 10px; font-size: 0.9rem; color: #9CA3AF;">
+                    Esto puede tomar unos segundos
+                </p>
             </div>
         `;
         
-        document.querySelector('.content').appendChild(loadingContainer);
+        document.body.appendChild(loadingContainer);
     }
     
     loadingContainer.style.display = 'flex';
@@ -1041,31 +1044,42 @@ function showSuccessConfirmation(collaboratorName, guestCount) {
         successContainer.id = 'successConfirmation';
         successContainer.className = 'success-confirmation';
         
-        document.querySelector('.content').appendChild(successContainer);
+        document.body.appendChild(successContainer);
     }
     
     const invitadosText = guestCount === 0 ? 'sin invitados' : 
                          guestCount === 1 ? 'con 1 invitado' : 
                          `con ${guestCount} invitados`;
     
-    const colaboradorAsiste = elements.collaboratorAttends.checked;
-    const colaboradorText = colaboradorAsiste ? 
-                         'El colaborador asistirá personalmente' : 
-                         'El colaborador NO asistirá personalmente';
+    const currentDate = new Date();
+    const fechaFormateada = currentDate.toLocaleDateString('es-AR', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+    });
+    const horaFormateada = currentDate.toLocaleTimeString('es-AR', {
+        hour: '2-digit',
+        minute: '2-digit'
+    });
     
     successContainer.innerHTML = `
         <div class="success-content">
-            <div class="success-icon">✅</div>
+            <div class="success-icon">🎉</div>
             <h2>¡Registro Exitoso!</h2>
             <div class="success-details">
-                <p><strong>${collaboratorName}</strong></p>
-                <p>${colaboradorText}</p>
-                <p>Confirmación registrada ${invitadosText}</p>
-                <p class="success-time">Registrado el ${new Date().toLocaleDateString('es-AR')} a las ${new Date().toLocaleTimeString('es-AR')}</p>
+                <p><strong>Colaborador:</strong> ${collaboratorName}</p>
+                <p><strong>Invitados:</strong> ${invitadosText}</p>
+                <p style="color: #059669; font-weight: 600; font-size: 1.2rem; margin: 15px 0;">
+                    🎊 ¡YA ESTÁS PARTICIPANDO POR LOS SORTEOS!
+                </p>
+                <p class="success-time">
+                    Registrado el ${fechaFormateada} a las ${horaFormateada}
+                </p>
             </div>
             <div class="success-actions">
                 <button id="closePageBtn" class="btn btn-primary">
-                    🚪 Cerrar Aplicación
+                    ✨ Finalizar y Cerrar
                 </button>
             </div>
         </div>
@@ -1091,16 +1105,31 @@ function showErrorConfirmation(errorMessage) {
         errorContainer.id = 'errorConfirmation';
         errorContainer.className = 'error-confirmation';
         
-        document.querySelector('.content').appendChild(errorContainer);
+        document.body.appendChild(errorContainer);
     }
+    
+    const currentDate = new Date();
+    const fechaFormateada = currentDate.toLocaleDateString('es-AR', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+    });
+    const horaFormateada = currentDate.toLocaleTimeString('es-AR', {
+        hour: '2-digit',
+        minute: '2-digit'
+    });
     
     errorContainer.innerHTML = `
         <div class="error-content">
-            <div class="error-icon">❌</div>
+            <div class="error-icon">⚠️</div>
             <h2>Error en el Registro</h2>
             <div class="error-details">
+                <p><strong>Detalle del error:</strong></p>
                 <p>${errorMessage}</p>
-                <p class="error-time">Intento fallido el ${new Date().toLocaleDateString('es-AR')} a las ${new Date().toLocaleTimeString('es-AR')}</p>
+                <p class="error-time">
+                    Intento fallido el ${fechaFormateada} a las ${horaFormateada}
+                </p>
             </div>
             <div class="error-actions">
                 <button id="retryBtn" class="btn btn-primary">
@@ -1123,29 +1152,62 @@ function showErrorConfirmation(errorMessage) {
 }
 
 function closePage() {
-    // Mostrar un mensaje de despedida
+    // Mostrar un mensaje de despedida mejorado
     const body = document.body;
     const originalContent = body.innerHTML;
     
     body.innerHTML = `
         <div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
                     display: flex; justify-content: center; align-items: center; 
-                    background-color: #f8f9fa; flex-direction: column; text-align: center;">
-            <div style="font-size: 72px; margin-bottom: 20px;">👋</div>
-            <h1>¡Gracias por utilizar el sistema!</h1>
-            <p style="margin: 15px 0; font-size: 1.2em;">La aplicación se cerrará en 3 segundos...</p>
+                    background: linear-gradient(135deg, #00AC99 0%, #00C4A7 50%, #00D4B5 100%); 
+                    flex-direction: column; text-align: center; color: white; 
+                    font-family: 'Kanit', sans-serif;">
+            <div style="animation: bounce 1s ease-in-out infinite;">
+                <div style="font-size: 80px; margin-bottom: 30px;">🎉</div>
+            </div>
+            <h1 style="font-size: 2.5rem; font-weight: 700; margin-bottom: 20px; text-shadow: 0 2px 4px rgba(0,0,0,0.3);">
+                ¡Gracias por registrarte!
+            </h1>
+            <p style="margin: 15px 0; font-size: 1.3rem; font-weight: 400; text-shadow: 0 1px 2px rgba(0,0,0,0.2);">
+                Tu asistencia ha sido confirmada exitosamente
+            </p>
+            <p style="margin: 10px 0; font-size: 1.1rem; font-weight: 300; opacity: 0.9;">
+                Redirigiendo a Google en <span id="countdown">3</span> segundos...
+            </p>
+            <div style="margin-top: 30px; padding: 15px 30px; background: rgba(255,255,255,0.2); 
+                        border-radius: 50px; backdrop-filter: blur(10px);">
+                <p style="font-size: 1rem; margin: 0; font-weight: 500;">
+                    ¡Nos vemos en el evento! 🎊
+                </p>
+            </div>
         </div>
+        <style>
+            @keyframes bounce {
+                0%, 100% { transform: translateY(0); }
+                50% { transform: translateY(-20px); }
+            }
+        </style>
     `;
     
-    // Esperar 3 segundos y luego cerrar la ventana o redirigir
-    setTimeout(() => {
-        try {
-            window.close(); // Intenta cerrar la ventana (puede no funcionar en todos los navegadores)
-        } catch (e) {
-            // Si no se puede cerrar, restauramos el contenido original
-            body.innerHTML = originalContent;
-            alert('Por favor, cierre esta ventana manualmente.');
+    // Countdown animado
+    let countdown = 3;
+    const countdownElement = document.getElementById('countdown');
+    
+    const countdownInterval = setInterval(() => {
+        countdown--;
+        if (countdownElement) {
+            countdownElement.textContent = countdown;
         }
+        
+        if (countdown <= 0) {
+            clearInterval(countdownInterval);
+        }
+    }, 1000);
+    
+    // Esperar 3 segundos y luego redirigir a Google
+    setTimeout(() => {
+        // Redirigir a Google
+        window.location.href = 'https://www.google.com';
     }, 3000);
 }
 
