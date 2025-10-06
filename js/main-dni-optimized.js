@@ -1,11 +1,12 @@
 /**
- * Sistema de Registro por DNI - OPTIMIZADO v4.2
+ * Sistema de Registro por DNI - GITHUB PAGES v4.2
  * Casino Magic - Eventos
  */
 
-// Configuración mínima
-const CONFIG = {
-    apiUrl: 'https://script.google.com/macros/s/AKfycbxxZ_auFNBLDyfp1s721eo6bxcx39X1sB3t1Bi_zxv5bncYikwmYv2AcuaPAcxY0P-N/exec'
+// Usar configuración global o fallback
+const CONFIG = window.APP_CONFIG || {
+    apiUrl: 'https://script.google.com/macros/s/AKfycbxxZ_auFNBLDyfp1s721eo6bxcx39X1sB3t1Bi_zxv5bncYikwmYv2AcuaPAcxY0P-N/exec',
+    demoMode: false
 };
 
 // Variables esenciales

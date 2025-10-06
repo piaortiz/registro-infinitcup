@@ -1,6 +1,6 @@
 /**
- * GOOGLE APPS SCRIPT - SISTEMA DE REGISTRO POR DNI - SIMPLIFICADO
- * Casino Magic - Eventos v4.1
+ * GOOGLE APPS SCRIPT - SISTEMA DE REGISTRO POR DNI - GITHUB PAGES COMPATIBLE
+ * Casino Magic - Eventos v4.2
  * Autor: Pia Ortiz
  * 
  * INSTRUCCIONES DE CONFIGURACIÓN:
@@ -8,12 +8,13 @@
  * 2. Copiar el ID de la spreadsheet de la URL
  * 3. Reemplazar SPREADSHEET_ID abajo
  * 4. Desplegar como Web App con permisos para "Cualquier persona"
- * 5. Copiar URL del Web App y actualizar en main-dni.js
+ * 5. URL de GitHub Pages: https://piaortiz.github.io/registro-infinitcup
  * 
  * CARACTERÍSTICAS:
+ * - Compatible con GitHub Pages (CORS configurado)
  * - Una sola tabla "Registros" con todos los datos
- * - Sistema simplificado y rápido
- * - Sin lógica compleja de participantes separados
+ * - Sistema optimizado para hosting estático
+ * - JSONP para evitar problemas de CORS
  */
 
 // ===== CONFIGURACIÓN =====
