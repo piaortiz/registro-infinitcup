@@ -7,7 +7,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="theme-color" content="#00AC99">
-    <title>Registro de Asistencia - Casino Magic</title>
+    <title>Registro al Evento - Casino Magic</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@200;300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -36,86 +36,105 @@
                 <!-- Mensajes de estado -->
                 <div id="message" class="message"></div>
                 
-                <!-- Título y búsqueda -->
-                <div class="search-section">
-                    <h2 class="content-title">Buscar colaborador</h2>
-                    <div class="search-input-container">
-                        <input 
-                            type="text" 
-                            id="searchInput" 
-                            class="search-input" 
-                            placeholder="Ingresa nombre o legajo del colaborador"
-                            autocomplete="off"
-                            inputmode="text"
-                        >
-                    </div>
-                    <div id="searchResults" class="search-results"></div>
-                </div>
-                
-                <!-- Sección de colaborador seleccionado -->
-                <div id="selectedSection" class="selected-section" style="display: none;">
-                    <!-- Tarjeta compacta del colaborador -->
-                    <div class="selected-card">
-                        <div class="selected-emoji">🤩</div>
-                        <div class="selected-details">
-                            <div id="selectedName" class="selected-name"></div>
-                            <div id="selectedLegajo" class="selected-legajo"></div>
+                <!-- PANTALLA 1: Verificación de DNI -->
+                <div id="dniScreen" class="screen">
+                    <div class="dni-section">
+                        <h2 class="content-title">Participa de los sorteos</h2>
+                        <p class="content-subtitle">Ingresa tu DNI</p>
+                        <div class="dni-input-container">
+                            <input 
+                                type="text" 
+                                id="dniInput" 
+                                class="dni-input" 
+                                placeholder="Ej: 12345678"
+                                autocomplete="off"
+                                inputmode="numeric"
+                                maxlength="8"
+                            >
+                            <button type="button" id="checkDniBtn" class="btn btn-primary">
+                                VERIFICAR DNI
+                            </button>
                         </div>
                     </div>
-                    
-                    <!-- Formulario de registro -->
+                </div>
+
+                <!-- PANTALLA 2: Formulario de registro -->
+                <div id="registrationScreen" class="screen" style="display: none;">
+                    <div class="registration-header">
+                        <h2 class="content-title">Completar Registro</h2>
+                        <p class="content-subtitle">Complete sus datos para participar del sorteo:</p>
+                        <div class="dni-display">
+                            <strong>DNI: <span id="displayDni"></span></strong>
+                        </div>
+                    </div>
+
+                    <!-- Formulario de datos personales -->
                     <form id="registrationForm">
+                        <div class="form-group">
+                            <label for="nombreInput" class="form-label">Nombre:</label>
+                            <input type="text" id="nombreInput" class="form-input" placeholder="Ej: Juan Carlos" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="apellidoInput" class="form-label">Apellido:</label>
+                            <input type="text" id="apellidoInput" class="form-input" placeholder="Ej: Pérez González" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="fechaNacimientoInput" class="form-label">Fecha de Nacimiento:</label>
+                            <input type="date" id="fechaNacimientoInput" class="form-input" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="emailInput" class="form-label">Email:</label>
+                            <input type="email" id="emailInput" class="form-input" placeholder="Ej: juan@email.com" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="telefonoInput" class="form-label">Teléfono:</label>
+                            <input type="tel" id="telefonoInput" class="form-input" placeholder="Ej: 11-1234-5678" required>
+                        </div>
+                        
                         <div class="form-group">
                             <div class="checkbox-container-modern">
                                 <input 
                                     type="checkbox" 
-                                    id="collaboratorAttends" 
+                                    id="participantConfirms" 
                                     class="checkbox-modern"
+                                    checked
                                 >
-                                <label for="collaboratorAttends" class="checkbox-label-modern">
-                                    Seleccionar si el colaborador está en el evento.
+                                <label for="participantConfirms" class="checkbox-label-modern">
+                                    Confirmo mi participación en el evento.
                                 </label>
                             </div>
                         </div>
                         
-                        <div class="form-group">
-                            <label class="form-label" for="guestCount">
-                                Cantidad de Invitados
-                            </label>
-                            <div class="guests-count-container">
-                                <input 
-                                    type="number" 
-                                    id="guestCount" 
-                                    min="0" 
-                                    max="10" 
-                                    value="0"
-                                    required
-                                    inputmode="numeric"
-                                    readonly
-                                >
-                                <div class="guest-count-controls">
-                                    <button type="button" class="guest-count-btn increment" id="incrementBtn">
-                                        <span>▲</span>
-                                    </button>
-                                    <button type="button" class="guest-count-btn decrement" id="decrementBtn">
-                                        <span>▼</span>
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div id="guestsSection" class="guests-section"></div>
-                        
                         <div class="form-actions">
                             <button type="submit" class="btn btn-primary" id="submitBtn">
-                                CONFIRMAR
+                                REGISTRARSE
                             </button>
                             
-                            <button type="button" class="btn btn-secondary" id="cancelBtn">
-                                VOLVER A BUSCAR
+                            <button type="button" class="btn btn-secondary" id="backBtn">
+                                VOLVER
                             </button>
                         </div>
                     </form>
+                </div>
+
+                <!-- PANTALLA 3: DNI ya registrado -->
+                <div id="alreadyRegisteredScreen" class="screen" style="display: none;">
+                    <div class="already-registered">
+                        <div class="participant-card">
+                            <div class="participant-emoji">✅</div>
+                            <div class="participant-details">
+                                <h3>Ya estas participando del sorteo</h3>
+                                <div id="existingParticipantName" class="participant-name"></div>
+                                <div id="existingParticipantDni" class="participant-dni"></div>
+                            </div>
+                        </div>
+                        <div class="form-actions">
+                            <button type="button" class="btn btn-secondary" id="backToStartBtn">
+                                VERIFICAR OTRO DNI
+                            </button>
+                        </div>
+                    </div>
+                </div>
                 </div>
             </div>
             
@@ -131,8 +150,8 @@
     <!-- Librerías externas -->
     <script src="https://cdn.jsdelivr.net/npm/fuse.js@6.6.2"></script>
     
-    <!-- Script principal -->
-    <script src="js/main.js?v=2.0.1"></script>
+    <!-- Script principal DNI OPTIMIZADO -->
+    <script src="js/main-dni-optimized.js?v=4.2"></script>
     
     <!-- Script para cerrar página -->
     <script src="js/close-page.js"></script>

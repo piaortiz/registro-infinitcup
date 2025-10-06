@@ -986,7 +986,7 @@ body {
 }
 
 .btn-secondary {
-    background: #6c757d;
+    background: linear-gradient(135deg, #34495e, #2c3e50);
     color: white;
     border: none;
     order: 2;
@@ -995,7 +995,14 @@ body {
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    box-shadow: 0 4px 12px rgba(108, 117, 125, 0.3);
+    box-shadow: 0 4px 12px rgba(52, 73, 94, 0.4);
+    transition: all 0.3s ease;
+}
+
+.btn-secondary:hover {
+    background: linear-gradient(135deg, #2c3e50, #34495e);
+    box-shadow: 0 6px 16px rgba(52, 73, 94, 0.6);
+    transform: translateY(-2px);
 }
 
 .btn-secondary:hover {
@@ -1081,357 +1088,6 @@ body {
 .form-input[type="number"] {
     text-align: center;
     font-weight: 600;
-}
-
-/* Invitados section - Mobile optimized */
-.guests-section {
-    margin-top: 20px;
-}
-
-@media (max-width: 768px) {
-    .guests-section {
-        margin-top: 15px;
-    }
-}
-
-/* Estilos mejorados para campos de invitados */
-.guest-item {
-    background: white;
-    border: 1px solid #e0e0e0;
-    border-radius: 12px;
-    padding: 20px;
-    margin-bottom: 15px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-}
-
-@media (max-width: 768px) {
-    .guest-item {
-        border-radius: 10px;
-        padding: 16px;
-        margin-bottom: 12px;
-        border: 1px solid #dee2e6;
-        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
-    }
-}
-
-/* Título del invitado */
-.guest-title {
-    font-family: 'Kanit', sans-serif;
-    font-size: 1.1rem;
-    font-weight: 600;
-    color: #495057;
-    margin-bottom: 15px;
-    margin-top: 0;
-    text-align: left;
-}
-
-@media (max-width: 768px) {
-    .guest-title {
-        font-size: 1rem;
-        margin-bottom: 12px;
-    }
-}
-
-/* Campo de nombre completo (ancho completo) */
-.guest-input-full {
-    width: 100%;
-    padding: 14px;
-    border: 2px solid #e0e0e0;
-    border-radius: 10px;
-    font-size: 16px;
-    margin-bottom: 12px;
-    background: #ffffff;
-    -webkit-appearance: none;
-    -moz-appearance: none;
-    appearance: none;
-    box-sizing: border-box;
-    font-family: 'Kanit', sans-serif;
-    font-weight: 400;
-    transition: all 0.3s ease;
-}
-
-@media (max-width: 768px) {
-    .guest-input-full {
-        padding: 12px;
-        border-radius: 8px;
-        font-size: 16px;
-        border: 1px solid #ced4da;
-    }
-}
-
-/* Contenedor para los campos en fila */
-.guest-input-row {
-    display: flex;
-    gap: 12px;
-    margin-bottom: 0;
-}
-
-@media (max-width: 768px) {
-    .guest-input-row {
-        gap: 10px;
-    }
-}
-
-/* Campos de vínculo y edad (media anchura) */
-.guest-input-half {
-    flex: 1;
-    padding: 14px;
-    border: 2px solid #e0e0e0;
-    border-radius: 10px;
-    font-size: 16px;
-    background: #ffffff;
-    -webkit-appearance: none;
-    -moz-appearance: none;
-    appearance: none;
-    box-sizing: border-box;
-    font-family: 'Kanit', sans-serif;
-    font-weight: 400;
-    transition: all 0.3s ease;
-}
-
-@media (max-width: 768px) {
-    .guest-input-half {
-        padding: 12px;
-        border-radius: 8px;
-        font-size: 16px;
-        border: 1px solid #ced4da;
-    }
-}
-
-/* Estados focus para todos los inputs de invitados */
-.guest-input-full:focus,
-.guest-input-half:focus {
-    outline: none;
-    border-color: #00AC99;
-    background: white;
-    box-shadow: 0 0 0 3px rgba(0, 172, 153, 0.1);
-}
-
-@media (max-width: 768px) {
-    .guest-input-full:focus,
-    .guest-input-half:focus {
-        border-color: #00C4A7;
-        box-shadow: 0 0 0 2px rgba(0, 172, 153, 0.1);
-    }
-}
-
-/* Placeholder styling */
-.guest-input-full::placeholder,
-.guest-input-half::placeholder {
-    color: #9CA3AF;
-    font-size: 0.95rem;
-}
-
-@media (max-width: 768px) {
-    .guest-input-full::placeholder,
-    .guest-input-half::placeholder {
-        font-size: 0.9rem;
-    }
-}
-
-/* Responsive para pantallas muy pequeñas - campos en columna solo en móviles muy pequeños */
-@media (max-width: 360px) {
-    .guest-input-row {
-        flex-direction: column;
-        gap: 8px;
-    }
-    
-    .guest-input-half {
-        width: 100%;
-    }
-}
-
-/* Estilos mejorados para la sección de cantidad de invitados */
-.form-group:has(#guestCount) {
-    background: #f8f9fa;
-    border-radius: 12px;
-    padding: 15px 20px;
-    margin: 0 20px 20px 20px;
-    border: 1px solid #e9ecef;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-}
-
-.form-group:has(#guestCount) .form-label {
-    font-family: 'Kanit', sans-serif;
-    font-size: 1rem;
-    font-weight: 600;
-    color: #495057;
-    margin-bottom: 12px;
-    text-align: center;
-    display: block;
-}
-
-/* Contenedor del input numérico con controles */
-.guests-count-container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 0;
-    max-width: 300px;
-    margin: 0 auto 8px;
-    background: white;
-    border: 2px solid #00AC99;
-    border-radius: 25px;
-    overflow: hidden;
-    box-shadow: 0 2px 6px rgba(0, 172, 153, 0.1);
-    height: 50px;
-}
-
-#guestCount {
-    width: 100%;
-    padding: 12px 18px;
-    border: none;
-    outline: none;
-    font-size: 1.8rem;
-    font-weight: 700;
-    text-align: center;
-    color: #495057;
-    font-family: 'Kanit', sans-serif;
-    background: transparent;
-    -webkit-appearance: none;
-    -moz-appearance: none;
-    appearance: none;
-    min-width: 0;
-}
-
-/* Remover flechas predeterminadas del input number */
-#guestCount::-webkit-outer-spin-button,
-#guestCount::-webkit-inner-spin-button {
-    -webkit-appearance: none;
-    margin: 0;
-}
-
-#guestCount[type=number] {
-    -moz-appearance: textfield;
-    appearance: textfield;
-}
-
-/* Botones de incremento/decremento */
-.guest-count-controls {
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-}
-
-.guest-count-btn {
-    background: #00AC99;
-    border: none;
-    color: white;
-    cursor: pointer;
-    font-size: 0.9rem;
-    font-weight: bold;
-    padding: 6px 12px;
-    transition: all 0.2s ease;
-    user-select: none;
-    -webkit-tap-highlight-color: transparent;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 45px;
-    height: 25px;
-    border-left: 1px solid #00AC99;
-}
-
-.guest-count-btn:hover {
-    background: #00C4A7;
-}
-
-.guest-count-btn:active {
-    background: #009688;
-    transform: scale(0.98);
-}
-
-.guest-count-btn:disabled {
-    background: #ced4da;
-    cursor: not-allowed;
-    color: #6c757d;
-}
-
-.guest-count-btn.increment {
-    border-radius: 0 23px 0 0;
-    border-bottom: 1px solid #00AC99;
-}
-
-.guest-count-btn.decrement {
-    border-radius: 0 0 23px 0;
-}
-
-/* Responsive para la sección de cantidad de invitados */
-@media (max-width: 768px) {
-    .form-group:has(#guestCount) {
-        padding: 12px 15px;
-        margin: 0 15px 15px 15px;
-        border-radius: 10px;
-    }
-    
-    .form-group:has(#guestCount) .form-label {
-        font-size: 0.95rem;
-        margin-bottom: 10px;
-    }
-    
-    .guests-count-container {
-        max-width: 280px;
-        height: 45px;
-        border-radius: 20px;
-        margin: 0 auto 6px;
-    }
-    
-    #guestCount {
-        padding: 10px 15px;
-        font-size: 1.6rem;
-    }
-    
-    .guest-count-btn {
-        padding: 5px 10px;
-        font-size: 0.8rem;
-        min-width: 40px;
-        height: 22px;
-    }
-    
-    .guest-count-btn.increment {
-        border-radius: 0 18px 0 0;
-    }
-    
-    .guest-count-btn.decrement {
-        border-radius: 0 0 18px 0;
-    }
-}
-
-@media (max-width: 480px) {
-    .form-group:has(#guestCount) {
-        padding: 10px 12px;
-        margin: 0 12px 12px 12px;
-    }
-    
-    .form-group:has(#guestCount) .form-label {
-        font-size: 0.9rem;
-    }
-    
-    .guests-count-container {
-        max-width: 250px;
-        height: 42px;
-        border-radius: 18px;
-    }
-    
-    #guestCount {
-        padding: 8px 12px;
-        font-size: 1.5rem;
-    }
-    
-    .guest-count-btn {
-        padding: 4px 8px;
-        font-size: 0.75rem;
-        min-width: 35px;
-        height: 20px;
-    }
-    
-    .guest-count-btn.increment {
-        border-radius: 0 15px 0 0;
-    }
-    
-    .guest-count-btn.decrement {
-        border-radius: 0 0 15px 0;
-    }
 }
 
 /* Checkbox moderno más grande */
@@ -1670,6 +1326,21 @@ body {
     animation: fadeIn 0.3s ease-in-out;
 }
 
+/* Pantalla final de éxito - ocupa toda la pantalla */
+.success-final-screen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 10000;
+    animation: fadeIn 0.3s ease-in-out;
+}
+
 .success-content {
     background: white;
     padding: 40px;
@@ -1720,6 +1391,13 @@ body {
 
 .success-actions {
     margin-top: 30px;
+}
+
+.success-actions .btn {
+    min-width: 150px;
+    padding: 12px 30px;
+    font-size: 16px;
+    font-weight: 600;
 }
 
 /* Tarjeta de confirmación de error */
@@ -1788,6 +1466,381 @@ body {
     gap: 15px;
     justify-content: center;
     flex-wrap: wrap;
+}
+
+/* ===== ESTILOS PARA SISTEMA DE DNI ===== */
+
+/* Sección de DNI */
+.dni-section {
+    margin-bottom: 25px;
+    width: 100%;
+    box-sizing: border-box;
+    min-width: 0;
+}
+
+.dni-input-container {
+    position: relative;
+    width: 100%;
+    box-sizing: border-box;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    align-items: center;
+}
+
+.dni-label {
+    font-family: 'Kanit', sans-serif;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #374151;
+    text-align: center;
+    margin-bottom: 10px;
+}
+
+.dni-input {
+    width: 100%;
+    max-width: 300px;
+    padding: 16px 20px;
+    border: 2px solid #e0e0e0;
+    border-radius: 25px;
+    font-size: 18px;
+    font-weight: 600;
+    text-align: center;
+    transition: all 0.3s ease;
+    background: #f8f9fa;
+    color: #495057;
+    font-family: 'Kanit', sans-serif;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    box-sizing: border-box;
+    letter-spacing: 1px;
+}
+
+.dni-input:focus {
+    outline: none;
+    border-color: #00AC99;
+    background: white;
+    box-shadow: 0 0 0 3px rgba(0, 172, 153, 0.1);
+}
+
+.dni-input::placeholder {
+    color: #9CA3AF;
+    font-weight: 400;
+    letter-spacing: normal;
+}
+
+.dni-message {
+    padding: 12px 20px;
+    border-radius: 10px;
+    font-family: 'Kanit', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 500;
+    text-align: center;
+    margin-top: 10px;
+    display: none;
+}
+
+.dni-message.success {
+    background: #d4edda;
+    border: 1px solid #c3e6cb;
+    color: #155724;
+}
+
+.dni-message.error {
+    background: #f8d7da;
+    border: 1px solid #f5c6cb;
+    color: #721c24;
+}
+
+.dni-message.warning {
+    background: #fff3cd;
+    border: 1px solid #ffeaa7;
+    color: #856404;
+}
+
+.dni-message.info {
+    background: #d1ecf1;
+    border: 1px solid #bee5eb;
+    color: #0c5460;
+}
+
+/* Sección de registro */
+.registration-section {
+    margin-bottom: 25px;
+    display: none;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* Formulario de datos personales */
+.personal-data-form {
+    background: #f8f9fa;
+    border-radius: 12px;
+    padding: 25px;
+    margin: 0 20px 20px 20px;
+    border: 1px solid #e9ecef;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.form-title {
+    font-family: 'Kanit', sans-serif;
+    font-size: 1.4rem;
+    font-weight: 600;
+    color: #374151;
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.personal-data-form .form-group {
+    margin-bottom: 20px;
+    padding: 0;
+}
+
+.personal-data-form .form-label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: #495057;
+    font-size: 0.95rem;
+    font-family: 'Kanit', sans-serif;
+}
+
+.personal-data-form .form-input {
+    width: 100%;
+    padding: 14px;
+    border: 2px solid #e0e0e0;
+    border-radius: 10px;
+    font-size: 16px;
+    transition: all 0.3s ease;
+    background: #ffffff;
+    box-sizing: border-box;
+    font-family: 'Kanit', sans-serif;
+    font-weight: 400;
+}
+
+.personal-data-form .form-input:focus {
+    outline: none;
+    border-color: #00AC99;
+    background: white;
+    box-shadow: 0 0 0 3px rgba(0, 172, 153, 0.1);
+}
+
+/* Estilos específicos para input de fecha */
+.personal-data-form .form-input[type="date"] {
+    position: relative;
+    background: #ffffff;
+    cursor: pointer;
+}
+
+.personal-data-form .form-input[type="date"]::-webkit-calendar-picker-indicator {
+    background: transparent;
+    bottom: 0;
+    color: transparent;
+    cursor: pointer;
+    height: auto;
+    left: 0;
+    position: absolute;
+    right: 0;
+    top: 0;
+    width: auto;
+}
+
+.personal-data-form .form-input[type="date"]:focus::-webkit-calendar-picker-indicator {
+    background: rgba(0, 172, 153, 0.1);
+    border-radius: 4px;
+}
+
+/* Responsive para campos de fecha */
+@media (max-width: 768px) {
+    .personal-data-form .form-input[type="date"] {
+        font-size: 16px; /* Evita zoom en iOS */
+    }
+}
+
+/* Participante existente */
+.existing-participant {
+    margin: 0 20px 20px 20px;
+}
+
+.participant-card {
+    background: linear-gradient(135deg, #4285f4, #1976d2);
+    border-radius: 12px;
+    padding: 20px 25px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    box-shadow: 0 2px 8px rgba(66, 133, 244, 0.3);
+    min-height: 80px;
+    color: white;
+}
+
+.participant-emoji {
+    font-size: 2rem;
+    flex-shrink: 0;
+}
+
+.participant-details {
+    flex: 1;
+    min-width: 0;
+}
+
+.participant-name {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #ffffff;
+    margin-bottom: 2px;
+    font-family: 'Kanit', sans-serif;
+    line-height: 1.2;
+}
+
+.participant-dni {
+    color: #b8f5f0;
+    font-size: 0.9rem;
+    font-weight: 500;
+    font-family: 'Kanit', sans-serif;
+    line-height: 1.2;
+}
+
+/* Responsive para DNI */
+@media (max-width: 768px) {
+    .dni-input-container {
+        gap: 12px;
+    }
+    
+    .dni-label {
+        font-size: 1rem;
+        margin-bottom: 8px;
+    }
+    
+    .dni-input {
+        max-width: 280px;
+        padding: 14px 18px;
+        font-size: 16px;
+        border-radius: 20px;
+    }
+    
+    .dni-message {
+        padding: 10px 16px;
+        font-size: 0.9rem;
+        margin-top: 8px;
+    }
+    
+    .personal-data-form {
+        padding: 20px;
+        margin: 0 15px 15px 15px;
+        border-radius: 10px;
+    }
+    
+    .form-title {
+        font-size: 1.2rem;
+        margin-bottom: 16px;
+    }
+    
+    .personal-data-form .form-input {
+        padding: 12px;
+        border-radius: 8px;
+        font-size: 16px;
+    }
+    
+    .existing-participant {
+        margin: 0 15px 15px 15px;
+    }
+    
+    .participant-card {
+        padding: 16px 20px;
+        gap: 12px;
+        border-radius: 10px;
+        min-height: 70px;
+    }
+    
+    .participant-emoji {
+        font-size: 1.8rem;
+    }
+    
+    .participant-name {
+        font-size: 1rem;
+    }
+    
+    .participant-dni {
+        font-size: 0.85rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .dni-input {
+        max-width: 250px;
+        padding: 12px 16px;
+        font-size: 16px;
+        border-radius: 18px;
+    }
+    
+    .personal-data-form {
+        padding: 16px;
+        margin: 0 12px 12px 12px;
+    }
+    
+    .form-title {
+        font-size: 1.1rem;
+    }
+    
+    .participant-card {
+        padding: 14px 18px;
+    }
+}
+
+/* Botón de verificar DNI */
+#checkDniBtn {
+    background: #00AC99;
+    color: white;
+    border: none;
+    padding: 14px 28px;
+    border-radius: 25px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-family: 'Kanit', sans-serif;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    width: 100%;
+    margin-top: 15px;
+    box-shadow: 0 4px 12px rgba(0, 172, 153, 0.3);
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    min-height: 50px;
+}
+
+#checkDniBtn:hover {
+    background: #00C4A7;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0, 172, 153, 0.4);
+}
+
+#checkDniBtn:active {
+    transform: translateY(0);
+}
+
+@media (max-width: 768px) {
+    #checkDniBtn {
+        padding: 12px 24px;
+        font-size: 15px;
+        min-height: 46px;
+        border-radius: 20px;
+    }
+    
+    #checkDniBtn:hover {
+        transform: none;
+        box-shadow: 0 4px 12px rgba(0, 172, 153, 0.3);
+    }
+}
+
+@media (max-width: 480px) {
+    #checkDniBtn {
+        padding: 10px 20px;
+        font-size: 14px;
+        min-height: 42px;
+    }
 }
 
 /* Animaciones */
@@ -1898,5 +1951,211 @@ body {
     .success-icon,
     .error-icon {
         font-size: 2.5rem;
+    }
+}
+
+/* ===== ESTILOS PARA SISTEMA DE PANTALLAS MÚLTIPLES ===== */
+
+/* Contenedor de pantallas */
+.screen {
+    width: 100%;
+    opacity: 1;
+    transition: opacity 0.3s ease-in-out;
+}
+
+.screen.hidden {
+    display: none !important;
+}
+
+/* Ocultar header en pantallas que no sean la inicial */
+.content-wrapper:has(#registrationScreen:not([style*="display: none"])) .header,
+.content-wrapper:has(#alreadyRegisteredScreen:not([style*="display: none"])) .header {
+    display: none;
+}
+
+/* Si el navegador no soporta :has(), usar clases auxiliares */
+body.hide-header .header {
+    display: none !important;
+}
+
+body.hide-header .content-wrapper {
+    padding-top: 20px;
+    margin-top: 0;
+}
+
+body.hide-header .content {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+/* Transición suave para ocultar/mostrar header */
+.header {
+    transition: all 0.3s ease-in-out;
+}
+
+body.hide-header .header {
+    opacity: 0;
+    transform: translateY(-100%);
+}
+
+/* Pantalla 1: Verificación DNI */
+.dni-section {
+    text-align: center;
+    padding: 30px 20px;
+}
+
+.content-subtitle {
+    color: #666;
+    font-size: 1rem;
+    margin-bottom: 25px;
+    line-height: 1.4;
+}
+
+.dni-input-container {
+    max-width: 400px;
+    margin: 0 auto;
+}
+
+/* Pantalla 2: Formulario de registro */
+.registration-header {
+    text-align: center;
+    padding: 25px 20px;
+    margin-bottom: 25px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 15px;
+    margin-top: 20px;
+}
+
+/* Ajustes cuando no hay header */
+body.hide-header .registration-header {
+    margin-top: 0;
+}
+
+body.hide-header .dni-section {
+    padding-top: 40px;
+}
+
+body.hide-header .already-registered {
+    padding-top: 40px;
+}
+
+.registration-header .content-title {
+    color: white;
+    margin-bottom: 10px;
+}
+
+.registration-header .content-subtitle {
+    color: rgba(255, 255, 255, 0.9);
+    margin-bottom: 15px;
+}
+
+.dni-display {
+    background: rgba(255, 255, 255, 0.2);
+    padding: 10px 20px;
+    border-radius: 10px;
+    display: inline-block;
+    font-size: 1.1rem;
+}
+
+/* Pantalla 3: Ya registrado */
+.already-registered {
+    text-align: center;
+    padding: 30px 20px;
+}
+
+.already-registered .participant-card {
+    margin-bottom: 30px;
+}
+
+.already-registered h3 {
+    color: white;
+    font-size: 1.5rem;
+    margin-bottom: 15px;
+}
+
+/* Navegación entre pantallas */
+.form-actions {
+    display: flex;
+    gap: 15px;
+    margin-top: 30px;
+    flex-wrap: wrap;
+}
+
+.form-actions .btn {
+    flex: 1;
+    min-width: 140px;
+}
+
+/* Animaciones de transición */
+@keyframes slideInRight {
+    from {
+        opacity: 0;
+        transform: translateX(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes slideInLeft {
+    from {
+        opacity: 0;
+        transform: translateX(-30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.screen.slide-in-right {
+    animation: slideInRight 0.4s ease-out;
+}
+
+.screen.slide-in-left {
+    animation: slideInLeft 0.4s ease-out;
+}
+
+@media (max-width: 768px) {
+    .dni-section {
+        padding: 20px 15px;
+    }
+    
+    .registration-header {
+        margin: 0 -10px 20px -10px;
+        border-radius: 10px;
+    }
+    
+    .form-actions {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .form-actions .btn {
+        width: 100%;
+        min-width: auto;
+    }
+}
+
+@media (max-width: 480px) {
+    .dni-input-container {
+        padding: 0 10px;
+    }
+    
+    .registration-header {
+        padding: 15px;
+        margin: 0 -5px 15px -5px;
+    }
+    
+    .registration-header .content-title {
+        font-size: 1.3rem;
+    }
+    
+    .dni-display {
+        font-size: 1rem;
+        padding: 8px 15px;
     }
 }
