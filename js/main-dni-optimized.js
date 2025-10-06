@@ -163,10 +163,13 @@ async function handleRegistrationSubmit(event) {
     
     try {
         const response = await sendInscription(data);
+        console.log('🔍 Respuesta del servidor:', response);
         
-        if (response.success) {
+        if (response.success || response.status === 'SUCCESS') {
+            console.log('✅ Registro exitoso, mostrando modal');
             showSuccessMessage(data.nombre, data.apellido);
         } else {
+            console.log('❌ Error en registro:', response);
             showMessage(response.message || 'Error al procesar registro', 'error');
         }
     } catch (error) {
@@ -291,6 +294,7 @@ function clearMessage() {
 
 // ===== PANTALLA DE ÉXITO =====
 function showSuccessMessage(nombre, apellido) {
+    console.log('🎉 Mostrando modal de éxito para:', nombre, apellido);
     document.body.classList.add('hide-header');
     
     const container = document.querySelector('.container');
