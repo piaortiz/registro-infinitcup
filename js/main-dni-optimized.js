@@ -167,14 +167,19 @@ async function handleRegistrationSubmit(event) {
         
         if (response.success || response.status === 'SUCCESS') {
             console.log('✅ Registro exitoso, mostrando modal');
+            // Limpiar mensajes anteriores
+            clearMessage();
+            // Mostrar modal de éxito
             showSuccessMessage(data.nombre, data.apellido);
         } else {
             console.log('❌ Error en registro:', response);
             showMessage(response.message || 'Error al procesar registro', 'error');
+            elements.submitBtn.disabled = false;
+            elements.submitBtn.textContent = 'REGISTRARSE';
         }
     } catch (error) {
+        console.log('❌ Error de conexión:', error);
         showMessage('Error al enviar registro. Intenta nuevamente.', 'error');
-    } finally {
         elements.submitBtn.disabled = false;
         elements.submitBtn.textContent = 'REGISTRARSE';
     }
@@ -295,29 +300,44 @@ function clearMessage() {
 // ===== PANTALLA DE ÉXITO =====
 function showSuccessMessage(nombre, apellido) {
     console.log('🎉 Mostrando modal de éxito para:', nombre, apellido);
+    
+    // Ocultar header
     document.body.classList.add('hide-header');
     
-    const container = document.querySelector('.container');
-    container.innerHTML = '';
-    
-    const successDiv = document.createElement('div');
-    successDiv.className = 'success-final-screen';
-    successDiv.innerHTML = `
+    // Crear el modal y agregarlo al body directamente
+    const successModal = document.createElement('div');
+    successModal.className = 'success-final-screen';
+    successModal.innerHTML = `
         <div class="success-content">
-            <div class="success-icon">✅</div>
+            <div class="success-icon">
+                <div class="checkmark-container">
+                    <div class="checkmark">✓</div>
+                </div>
+            </div>
             <h2>Registro Exitoso</h2>
-            <p><strong>${nombre} ${apellido}</strong></p>
-            <p>Tu registro ha sido completado correctamente. Recorda que el ganador tiene que estar presente en el evento</p>
+            <div class="success-details">
+                <p><strong>${nombre} ${apellido}</strong></p>
+                <p>Tu registro ha sido completado correctamente<br>Recorda que el ganador tiene que estar presente en el evento</p>
+            </div>
             <div class="success-actions">
-                <button type="button" class="btn btn-primary" id="closeSuccessBtn">CERRAR</button>
+                <button type="button" class="btn btn-success-primary" id="closeSuccessBtn">CERRAR</button>
             </div>
         </div>
     `;
     
-    container.appendChild(successDiv);
+    // Agregar al body
+    document.body.appendChild(successModal);
     
-    successDiv.querySelector('#closeSuccessBtn').addEventListener('click', () => {
-        if (window.close) window.close();
-        else successDiv.remove();
+    // Agregar event listener
+    successModal.querySelector('#closeSuccessBtn').addEventListener('click', () => {
+        successModal.remove();
+        if (window.close) {
+            window.close();
+        }
     });
+    
+    // Auto-foco en el botón después de un momento
+    setTimeout(() => {
+        successModal.querySelector('#closeSuccessBtn').focus();
+    }, 500);
 }

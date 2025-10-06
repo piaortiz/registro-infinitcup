@@ -135,6 +135,7 @@ function handleInscribir(params) {
     if (saveResult.success) {
       console.log('✅ Registro guardado exitosamente');
       return {
+        success: true,
         status: 'SUCCESS',
         message: 'Registro completado exitosamente',
         data: {
