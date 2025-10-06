@@ -5,7 +5,7 @@
 
 // Usar configuración global o fallback
 const CONFIG = window.APP_CONFIG || {
-    apiUrl: 'https://script.google.com/macros/s/AKfycbxxZ_auFNBLDyfp1s721eo6bxcx39X1sB3t1Bi_zxv5bncYikwmYv2AcuaPAcxY0P-N/exec',
+    apiUrl: 'https://script.google.com/macros/s/AKfycbw0gCV_b_vXkwI-utkTpN8mLexTxxlSc74au7dhuho74zOdrCEtYECSgmQOsquGKOMV/exec',
     demoMode: false
 };
 
@@ -255,7 +255,7 @@ async function sendInscription(data) {
         };
         
         const params = new URLSearchParams({
-            action: 'processInscription',
+            action: 'inscribir',
             callback: callbackName,
             ...data
         });
