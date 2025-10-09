@@ -30,6 +30,9 @@ function doGet(e) {
     const action = e.parameter.action;
     const callback = e.parameter.callback;
     
+    console.log('🔍 Action:', action);
+    console.log('📞 Callback:', callback);
+    
     let result;
     
     switch (action) {
@@ -41,12 +44,19 @@ function doGet(e) {
         result = handleInscribir(e.parameter);
         break;
         
+      case 'registrar':
+        // Nueva acción que verifica duplicados Y registra en una sola llamada
+        result = handleRegistrarConVerificacion(e.parameter);
+        break;
+        
       default:
         result = {
           status: 'ERROR',
-          message: 'Acción no válida'
+          message: 'Acción no válida: ' + action
         };
     }
+    
+    console.log('📋 Resultado antes de respuesta:', JSON.stringify(result));
     
     return createResponse(result, callback);
     
@@ -63,7 +73,82 @@ function doGet(e) {
   }
 }
 
-// ===== VERIFICAR DNI =====
+// ===== NUEVA FUNCIÓN: REGISTRAR CON VERIFICACIÓN =====
+function handleRegistrarConVerificacion(params) {
+  console.log('🔄 Procesando registro con verificación para DNI:', params.dni);
+  
+  try {
+    // Validar datos requeridos
+    if (!params.dni || !params.nombre || !params.apellido) {
+      return {
+        status: 'ERROR',
+        message: 'DNI, nombre y apellido son requeridos'
+      };
+    }
+    
+    // Primero verificar si ya está registrado
+    const existingRegistro = findRegistroByDni(params.dni);
+    
+    if (existingRegistro) {
+      console.log('⚠️ DNI ya registrado:', params.dni);
+      return {
+        status: 'DUPLICATE',
+        message: 'Este DNI ya está registrado al evento',
+        existingData: {
+          dni: existingRegistro.dni,
+          nombre: existingRegistro.nombre,
+          apellido: existingRegistro.apellido,
+          fechaInscripcion: existingRegistro.fechaInscripcion
+        }
+      };
+    }
+    
+    // Si no existe, proceder con el registro
+    const inscriptionData = {
+      dni: params.dni,
+      nombre: params.nombre,
+      apellido: params.apellido,
+      fechaNacimiento: params.fechaNacimiento,
+      email: params.email || '',
+      telefono: params.telefono || '',
+      fecha: params.fecha || new Date().toISOString().split('T')[0],
+      hora: params.hora || new Date().toTimeString().split(' ')[0],
+      timestamp: params.timestamp || new Date().toISOString()
+    };
+    
+    // Guardar registro
+    const saveResult = saveRegistro(inscriptionData);
+    
+    if (saveResult.success) {
+      console.log('✅ Registro guardado exitosamente');
+      return {
+        success: true,
+        status: 'SUCCESS',
+        message: 'Registro completado exitosamente',
+        data: {
+          dni: inscriptionData.dni,
+          nombre: `${inscriptionData.nombre} ${inscriptionData.apellido}`,
+          timestamp: inscriptionData.timestamp
+        }
+      };
+    } else {
+      console.error('❌ Error guardando registro:', saveResult.error);
+      return {
+        status: 'ERROR',
+        message: 'Error al guardar registro: ' + saveResult.error
+      };
+    }
+    
+  } catch (error) {
+    console.error('❌ Error procesando registro con verificación:', error);
+    return {
+      status: 'ERROR',
+      message: 'Error interno: ' + error.toString()
+    };
+  }
+}
+
+// ===== VERIFICAR DNI (MANTENER PARA COMPATIBILIDAD) =====
 function handleCheckDni(params) {
   console.log('🔍 Verificando DNI:', params.dni);
   
@@ -313,16 +398,22 @@ function formatHeaders(sheet, numColumns) {
 }
 
 function createResponse(result, callback) {
+  console.log('📤 Creando respuesta para callback:', callback);
+  console.log('📄 Resultado:', JSON.stringify(result));
+  
   const response = JSON.stringify(result);
   
   if (callback) {
     // JSONP response
     const jsonpResponse = `${callback}(${response});`;
+    console.log('🔄 JSONP Response:', jsonpResponse);
+    
     return ContentService
       .createTextOutput(jsonpResponse)
       .setMimeType(ContentService.MimeType.JAVASCRIPT);
   } else {
     // JSON response
+    console.log('📄 JSON Response:', response);
     return ContentService
       .createTextOutput(response)
       .setMimeType(ContentService.MimeType.JSON);
@@ -428,6 +519,75 @@ function setupSheets() {
 }
 
 // ===== FUNCIONES DE TESTING =====
+
+/**
+ * Función para probar el nuevo flujo de registro con verificación
+ */
+function testRegistrarConVerificacion() {
+  console.log('🧪 Probando nuevo flujo de registro...');
+  
+  // Datos de prueba
+  const testData = {
+    dni: '12345678',
+    nombre: 'Juan Carlos',
+    apellido: 'Pérez',
+    fechaNacimiento: '1990-05-15',
+    email: 'juan.perez@email.com',
+    telefono: '11-1234-5678',
+    confirma: true
+  };
+  
+  // Probar registro
+  const result = handleRegistrarConVerificacion(testData);
+  console.log('🔍 Resultado:', JSON.stringify(result, null, 2));
+  
+  // Probar duplicado
+  console.log('\n🔄 Probando registro duplicado...');
+  const duplicateResult = handleRegistrarConVerificacion(testData);
+  console.log('🔍 Resultado duplicado:', JSON.stringify(duplicateResult, null, 2));
+  
+  return {
+    primerRegistro: result,
+    registroDuplicado: duplicateResult
+  };
+}
+
+/**
+ * Función para limpiar datos de prueba
+ */
+function cleanTestData() {
+  console.log('🧹 Limpiando datos de prueba...');
+  
+  try {
+    const sheet = getOrCreateSheet(REGISTROS_SHEET);
+    const data = sheet.getDataRange().getValues();
+    
+    // Buscar y eliminar DNIs de prueba
+    const testDnis = ['12345678', '87654321'];
+    let deletedRows = 0;
+    
+    for (let i = data.length - 1; i >= 1; i--) { // Desde abajo hacia arriba
+      if (data[i][0] && testDnis.includes(data[i][0].toString())) {
+        sheet.deleteRow(i + 1);
+        deletedRows++;
+        console.log(`🗑️ Eliminado DNI: ${data[i][0]}`);
+      }
+    }
+    
+    console.log(`✅ Limpieza completada: ${deletedRows} filas eliminadas`);
+    return {
+      success: true,
+      deletedRows: deletedRows
+    };
+    
+  } catch (error) {
+    console.error('❌ Error limpiando datos:', error);
+    return {
+      success: false,
+      error: error.toString()
+    };
+  }
+}
 
 /**
  * Función para probar el sistema desde el editor de Apps Script

@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test de Conexión API</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            max-width: 600px; 
+            margin: 50px auto; 
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 10px 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .status { 
+            padding: 10px; 
+            border-radius: 4px; 
+            margin: 10px 0;
+        }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .info { background: #d1ecf1; color: #0c5460; }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background: #0056b3; }
+        pre {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 Test de Conexión API v4.3</h1>
+    
+    <div class="test-card">
+        <h3>1. Test de Registro</h3>
+        <button onclick="testRegistro()">Probar Registro</button>
+        <div id="registroResult"></div>
+    </div>
+    
+    <div class="test-card">
+        <h3>2. Test de Duplicado</h3>
+        <button onclick="testDuplicado()">Probar Duplicado</button>
+        <div id="duplicadoResult"></div>
+    </div>
+    
+    <div class="test-card">
+        <h3>3. Test de Conexión</h3>
+        <button onclick="testConexion()">Probar Conexión</button>
+        <div id="conexionResult"></div>
+    </div>
+
+    <script>
+        const API_URL = 'https://script.google.com/macros/s/AKfycbw0GipKZOWw2fauipNzysmSu016D23YMmVGN2FugBRnTLUGt3lRKlkiNbO_pM4rCq81/exec';
+        
+        async function makeRequest(url, timeout = 10000) {
+            return new Promise((resolve, reject) => {
+                // Extraer el nombre del callback de la URL
+                const callbackMatch = url.match(/callback=([^&]+)/);
+                if (!callbackMatch) {
+                    reject(new Error('No se encontró callback en la URL'));
+                    return;
+                }
+                
+                const callbackName = callbackMatch[1];
+                const script = document.createElement('script');
+                
+                console.log('🔗 Creando callback:', callbackName);
+                console.log('🌐 URL completa:', url);
+                
+                window[callbackName] = function(response) {
+                    console.log('✅ Callback ejecutado:', callbackName, response);
+                    document.head.removeChild(script);
+                    delete window[callbackName];
+                    resolve(response);
+                };
+                
+                script.onerror = () => {
+                    console.error('❌ Error cargando script:', url);
+                    if (window[callbackName]) {
+                        delete window[callbackName];
+                    }
+                    if (script.parentNode) {
+                        document.head.removeChild(script);
+                    }
+                    reject(new Error('Error de red'));
+                };
+                
+                script.src = url;
+                document.head.appendChild(script);
+                
+                setTimeout(() => {
+                    if (window[callbackName]) {
+                        console.error('⏰ Timeout en callback:', callbackName);
+                        delete window[callbackName];
+                        if (script.parentNode) {
+                            document.head.removeChild(script);
+                        }
+                        reject(new Error('Timeout'));
+                    }
+                }, timeout);
+            });
+        }
+        
+        async function testRegistro() {
+            const resultDiv = document.getElementById('registroResult');
+            resultDiv.innerHTML = '<div class="status info">🔄 Probando registro...</div>';
+            
+            try {
+                const callbackName = 'callback_' + Date.now();
+                const testData = {
+                    action: 'registrar',
+                    dni: '12345679',
+                    nombre: 'Test',
+                    apellido: 'Usuario',
+                    fechaNacimiento: '1990-01-01',
+                    email: 'test@email.com',
+                    telefono: '11-1234-5678'
+                };
+                
+                const params = new URLSearchParams(testData);
+                const url = `${API_URL}?${params}&callback=${callbackName}`;
+                
+                console.log('🌐 Testing URL:', url);
+                
+                const response = await makeRequest(url);
+                
+                if (response.success || response.status === 'SUCCESS') {
+                    resultDiv.innerHTML = `
+                        <div class="status success">✅ Registro exitoso</div>
+                        <pre>${JSON.stringify(response, null, 2)}</pre>
+                    `;
+                } else if (response.status === 'DUPLICATE') {
+                    resultDiv.innerHTML = `
+                        <div class="status info">⚠️ DNI duplicado (esperado si ya se probó antes)</div>
+                        <pre>${JSON.stringify(response, null, 2)}</pre>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <div class="status error">❌ Error: ${response.message || 'Error desconocido'}</div>
+                        <pre>${JSON.stringify(response, null, 2)}</pre>
+                    `;
+                }
+            } catch (error) {
+                console.error('❌ Error completo:', error);
+                resultDiv.innerHTML = `
+                    <div class="status error">❌ Error de conexión: ${error.message}</div>
+                `;
+            }
+        }
+        
+        async function testDuplicado() {
+            const resultDiv = document.getElementById('duplicadoResult');
+            resultDiv.innerHTML = '<div class="status info">🔄 Probando duplicado...</div>';
+            
+            try {
+                const callbackName = 'callback_' + Date.now();
+                const testData = {
+                    action: 'registrar',
+                    dni: '12345679', // Mismo DNI del test anterior
+                    nombre: 'Test2',
+                    apellido: 'Usuario2',
+                    fechaNacimiento: '1991-01-01',
+                    email: 'test2@email.com',
+                    telefono: '11-1234-5679'
+                };
+                
+                const params = new URLSearchParams(testData);
+                const url = `${API_URL}?${params}&callback=${callbackName}`;
+                
+                const response = await makeRequest(url);
+                
+                if (response.status === 'DUPLICATE') {
+                    resultDiv.innerHTML = `
+                        <div class="status success">✅ Duplicado detectado correctamente</div>
+                        <pre>${JSON.stringify(response, null, 2)}</pre>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <div class="status error">❌ Debería haber detectado duplicado</div>
+                        <pre>${JSON.stringify(response, null, 2)}</pre>
+                    `;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="status error">❌ Error de conexión: ${error.message}</div>
+                `;
+            }
+        }
+        
+        async function testConexion() {
+            const resultDiv = document.getElementById('conexionResult');
+            resultDiv.innerHTML = '<div class="status info">🔄 Probando conexión básica...</div>';
+            
+            try {
+                const callbackName = 'callback_' + Date.now();
+                const testData = {
+                    action: 'checkDni',
+                    dni: '99999999'
+                };
+                
+                const params = new URLSearchParams(testData);
+                const url = `${API_URL}?${params}&callback=${callbackName}`;
+                
+                const response = await makeRequest(url);
+                
+                resultDiv.innerHTML = `
+                    <div class="status success">✅ Conexión exitosa</div>
+                    <pre>${JSON.stringify(response, null, 2)}</pre>
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="status error">❌ Error de conexión: ${error.message}</div>
+                `;
+            }
+        }
+    </script>
+</body>
+</html>

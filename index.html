@@ -50,9 +50,12 @@
                                 autocomplete="off"
                                 inputmode="numeric"
                                 maxlength="8"
+                                aria-describedby="dni-help"
+                                aria-required="true"
                             >
+                            <div id="dni-help" class="form-help">Ingresa tu número de DNI sin puntos (7-8 dígitos)</div>
                             <button type="button" id="checkDniBtn" class="btn btn-primary">
-                                VERIFICAR DNI
+                                CONTINUAR
                             </button>
                         </div>
                     </div>
@@ -98,6 +101,7 @@
                                     id="participantConfirms" 
                                     class="checkbox-modern"
                                     checked
+                                    required
                                 >
                                 <label for="participantConfirms" class="checkbox-label-modern">
                                     Confirmo mi participación en el evento.
@@ -116,7 +120,6 @@
                         </div>
                     </form>
                 </div>
-
                 <!-- PANTALLA 3: DNI ya registrado -->
                 <div id="alreadyRegisteredScreen" class="screen" style="display: none;">
                     <div class="already-registered">
@@ -148,13 +151,10 @@
     </div>
 
     <!-- Configuración de la aplicación -->
-    <script src="js/config.js?v=4.2"></script>
-    
-    <!-- Librerías externas -->
-    <script src="https://cdn.jsdelivr.net/npm/fuse.js@6.6.2"></script>
+    <script src="js/config.js?v=4.3"></script>
     
     <!-- Script principal DNI OPTIMIZADO -->
-    <script src="js/main-dni-optimized.js?v=4.2"></script>
+    <script src="js/main-dni-optimized.js?v=4.3"></script>
     
     <!-- Script para cerrar página -->
     <script src="js/close-page.js"></script>

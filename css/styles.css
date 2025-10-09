@@ -1090,6 +1090,21 @@ body {
     font-weight: 600;
 }
 
+/* Helper text para formularios */
+.form-help {
+    font-size: 0.875rem;
+    color: #6c757d;
+    margin-top: 4px;
+    margin-left: 2px;
+    line-height: 1.4;
+}
+
+@media (max-width: 768px) {
+    .form-help {
+        font-size: 0.8rem;
+    }
+}
+
 /* Checkbox moderno más grande */
 .checkbox-container-modern {
     display: flex;
@@ -1572,6 +1587,24 @@ body {
     color: #9CA3AF;
     font-weight: 400;
     letter-spacing: normal;
+}
+
+/* Helper text específico para DNI */
+.dni-input-container .form-help {
+    font-size: 0.875rem;
+    color: #6c757d;
+    text-align: center;
+    margin-top: -10px;
+    margin-bottom: 5px;
+    line-height: 1.4;
+    max-width: 300px;
+}
+
+@media (max-width: 768px) {
+    .dni-input-container .form-help {
+        font-size: 0.8rem;
+        margin-top: -8px;
+    }
 }
 
 .dni-message {

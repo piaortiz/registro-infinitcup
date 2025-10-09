@@ -1,14 +1,15 @@
 /**
- * Configuración para GitHub Pages
+ * Configuración para GitHub Pages v4.3
  * Este archivo permite que la aplicación funcione tanto en demo como en producción
+ * MEJORAS: Optimización de carga, validación mejorada
  */
 
 window.APP_CONFIG = {
     // Configuración de entorno
     environment: 'github-pages', // 'github-pages' o 'production'
     
-    // URLs de APIs
-    apiUrl: 'https://script.google.com/macros/s/AKfycbw0gCV_b_vXkwI-utkTpN8mLexTxxlSc74au7dhuho74zOdrCEtYECSgmQOsquGKOMV/exec',
+    // URLs de APIs - ACTUALIZADA v4.3 (con correcciones de callback)
+    apiUrl: 'https://script.google.com/macros/s/AKfycbw0GipKZOWw2fauipNzysmSu016D23YMmVGN2FugBRnTLUGt3lRKlkiNbO_pM4rCq81/exec',
     
     // GitHub Pages info
     githubPagesUrl: 'https://piaortiz.github.io/registro-infinitcup',
@@ -38,8 +39,15 @@ window.APP_CONFIG = {
     messages: {
         title: 'Registro al Evento - Casino Magic',
         participateText: 'Participa de los sorteos',
-        dniPlaceholder: 'Ingresa tu DNI',
-        verifyButton: 'VERIFICAR',
+        dniPlaceholder: 'Completa tus datos para participar',
         registerButton: 'REGISTRARSE'
+    },
+    
+    // Configuración de timeouts y reintentos
+    network: {
+        defaultTimeout: 5000,
+        longTimeout: 15000,
+        maxRetries: 2,
+        retryDelay: 1000
     }
 };

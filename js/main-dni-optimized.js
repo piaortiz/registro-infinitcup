@@ -1,6 +1,13 @@
 /**
- * Sistema de Registro por DNI - GITHUB PAGES v4.2
+ * Sistema de Registro por DNI - GITHUB PAGES v4.3
  * Casino Magic - Eventos
+ * 
+ * FLUJO NUEVO:
+ * 1. Pantalla DNI → Validación argentina local
+ * 2. Pantalla Formulario → Completar datos  
+ * 3. Al enviar → Una sola llamada que verifica duplicados Y registra
+ * 
+ * MEJORAS: Sin verificación previa, una sola llamada API, carga más rápida
  */
 
 // Usar configuración global o fallback
@@ -16,7 +23,7 @@ let elements = {};
 // Pantallas
 const SCREENS = {
     DNI_CHECK: 'dniScreen',
-    REGISTRATION: 'registrationScreen', 
+    REGISTRATION: 'registrationScreen',
     ALREADY_REGISTERED: 'alreadyRegisteredScreen'
 };
 
@@ -101,7 +108,7 @@ function setupEventListeners() {
         if (e.key === 'Enter') handleCheckDni();
     });
     
-    // Botón verificar DNI
+    // Botón continuar con DNI
     elements.checkDniBtn?.addEventListener('click', handleCheckDni);
     
     // Formulario de registro
@@ -112,36 +119,27 @@ function setupEventListeners() {
     elements.backToStartBtn?.addEventListener('click', goBackToDniCheck);
 }
 
-// ===== VERIFICACIÓN DNI =====
+// ===== VERIFICACIÓN DNI (SOLO VALIDACIÓN LOCAL) =====
 async function handleCheckDni() {
     const dni = elements.dniInput?.value?.trim();
     
-    if (!validateDni(dni)) {
-        showMessage('Ingresa un DNI válido (7-8 números)', 'error');
+    if (!validateDniArgentino(dni)) {
+        showMessage('Ingresa un DNI argentino válido (7-8 números)', 'error');
         return;
     }
     
     elements.checkDniBtn.disabled = true;
-    elements.checkDniBtn.textContent = 'VERIFICANDO...';
+    elements.checkDniBtn.textContent = 'VALIDANDO...';
     
-    try {
-        const response = await checkDniInServer(dni);
-        
-        if (response.exists) {
-            showMessage('Recorda que el ganador debe estar presente en el evento', 'warning');
-            goToAlreadyRegistered(response.participant);
-        } else {
-            goToRegistrationForm(dni);
-        }
-    } catch (error) {
-        showMessage('Error al verificar DNI. Intenta nuevamente.', 'error');
-    } finally {
+    // Simulamos un pequeño delay para UX
+    setTimeout(() => {
         elements.checkDniBtn.disabled = false;
-        elements.checkDniBtn.textContent = 'VERIFICAR';
-    }
+        elements.checkDniBtn.textContent = 'CONTINUAR';
+        goToRegistrationForm(dni);
+    }, 500);
 }
 
-// ===== REGISTRO =====
+// ===== REGISTRO (VERIFICACIÓN Y REGISTRO EN UNA SOLA LLAMADA) =====
 async function handleRegistrationSubmit(event) {
     event.preventDefault();
     
@@ -159,18 +157,22 @@ async function handleRegistrationSubmit(event) {
     
     elements.submitBtn.disabled = true;
     elements.submitBtn.textContent = 'REGISTRANDO...';
-    showMessage('Enviando registro...', 'info');
+    showMessage('Procesando registro...', 'info');
     
     try {
-        const response = await sendInscription(data);
+        // Una sola llamada que verifica duplicados Y registra
+        const response = await sendRegistration(data);
         console.log('🔍 Respuesta del servidor:', response);
         
         if (response.success || response.status === 'SUCCESS') {
-            console.log('✅ Registro exitoso, mostrando modal');
-            // Limpiar mensajes anteriores
+            console.log('✅ Registro exitoso');
             clearMessage();
-            // Mostrar modal de éxito
             showSuccessMessage(data.nombre, data.apellido);
+        } else if (response.status === 'DUPLICATE') {
+            // DNI ya registrado
+            console.log('⚠️ DNI duplicado');
+            showMessage('Este DNI ya está registrado. Recorda que el ganador debe estar presente en el evento', 'warning');
+            goToAlreadyRegistered(response.existingData);
         } else {
             console.log('❌ Error en registro:', response);
             showMessage(response.message || 'Error al procesar registro', 'error');
@@ -179,15 +181,30 @@ async function handleRegistrationSubmit(event) {
         }
     } catch (error) {
         console.log('❌ Error de conexión:', error);
-        showMessage('Error al enviar registro. Intenta nuevamente.', 'error');
+        showMessage('Error al procesar. Intenta nuevamente.', 'error');
         elements.submitBtn.disabled = false;
         elements.submitBtn.textContent = 'REGISTRARSE';
     }
 }
 
-// ===== VALIDACIONES =====
-function validateDni(dni) {
-    return dni && /^\d{7,8}$/.test(dni);
+// ===== VALIDACIONES MEJORADAS =====
+function validateDniArgentino(dni) {
+    if (!dni || !/^\d{7,8}$/.test(dni)) return false;
+    
+    // Validación específica para DNI argentino
+    const dniNum = parseInt(dni);
+    
+    // Rango válido para DNI argentino
+    if (dniNum < 1000000 || dniNum > 99999999) return false;
+    
+    // Validaciones adicionales para DNI argentino
+    // DNIs muy bajos o secuenciales suelen ser inválidos
+    if (dniNum < 3000000) return false;
+    
+    // DNI no puede ser todos números iguales
+    if (/^(\d)\1+$/.test(dni)) return false;
+    
+    return true;
 }
 
 function validatePersonalData() {
@@ -225,61 +242,77 @@ function validateEmail(email) {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 
-// ===== COMUNICACIÓN API =====
-async function checkDniInServer(dni) {
+// ===== COMUNICACIÓN API SIMPLIFICADA =====
+async function makeRequest(url, timeout = 5000) {
     return new Promise((resolve, reject) => {
-        const callbackName = 'callback_' + Date.now();
+        // Extraer el nombre del callback de la URL
+        const callbackMatch = url.match(/callback=([^&]+)/);
+        if (!callbackMatch) {
+            reject(new Error('No se encontró callback en la URL'));
+            return;
+        }
+        
+        const callbackName = callbackMatch[1];
         const script = document.createElement('script');
         
-        window[callbackName] = function(response) {
-            document.head.removeChild(script);
+        console.log('🔗 Creando callback:', callbackName);
+        
+        const cleanup = () => {
+            if (script.parentNode) {
+                document.head.removeChild(script);
+            }
             delete window[callbackName];
+        };
+        
+        window[callbackName] = function(response) {
+            console.log('✅ Callback ejecutado:', callbackName, response);
+            cleanup();
             resolve(response);
         };
         
-        script.onerror = () => reject(new Error('Error de red'));
-        script.src = `${CONFIG.apiUrl}?action=checkDni&dni=${dni}&callback=${callbackName}`;
+        script.onerror = () => {
+            console.error('❌ Error cargando script:', url);
+            cleanup();
+            reject(new Error('Error de red'));
+        };
+        
+        script.src = url;
         document.head.appendChild(script);
         
         setTimeout(() => {
             if (window[callbackName]) {
-                document.head.removeChild(script);
-                delete window[callbackName];
+                console.error('⏰ Timeout en callback:', callbackName);
+                cleanup();
                 reject(new Error('Timeout'));
             }
-        }, 10000);
+        }, timeout);
     });
 }
 
-async function sendInscription(data) {
-    return new Promise((resolve, reject) => {
-        const callbackName = 'callback_' + Date.now();
-        const script = document.createElement('script');
-        
-        window[callbackName] = function(response) {
-            document.head.removeChild(script);
-            delete window[callbackName];
-            resolve(response);
-        };
-        
-        const params = new URLSearchParams({
-            action: 'inscribir',
-            callback: callbackName,
-            ...data
-        });
-        
-        script.onerror = () => reject(new Error('Error de red'));
-        script.src = `${CONFIG.apiUrl}?${params}`;
-        document.head.appendChild(script);
-        
-        setTimeout(() => {
-            if (window[callbackName]) {
-                document.head.removeChild(script);
-                delete window[callbackName];
-                reject(new Error('Timeout'));
-            }
-        }, 15000);
-    });
+// Función principal para registrar (incluye verificación de duplicados)
+async function sendRegistration(data, retries = 2) {
+    for (let attempt = 0; attempt <= retries; attempt++) {
+        try {
+            const callbackName = 'callback_' + Date.now();
+            
+            // Preparar datos sin el callback primero
+            const requestData = {
+                action: 'registrar',
+                ...data
+            };
+            
+            const params = new URLSearchParams(requestData);
+            const url = `${CONFIG.apiUrl}?${params}&callback=${callbackName}`;
+            
+            console.log('🔍 URL de petición:', url);
+            
+            return await makeRequest(url, 15000);
+        } catch (error) {
+            console.error('❌ Error en intento', attempt + 1, ':', error);
+            if (attempt === retries) throw error;
+            await new Promise(resolve => setTimeout(resolve, 1000));
+        }
+    }
 }
 
 // ===== MENSAJES =====

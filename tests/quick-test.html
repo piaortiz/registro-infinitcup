@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Quick Test - Callback Fix</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background: #f0f0f0; }
+        .test-box { background: white; padding: 20px; border-radius: 8px; margin: 10px 0; }
+        .success { border-left: 4px solid #28a745; }
+        .error { border-left: 4px solid #dc3545; }
+        .info { border-left: 4px solid #007bff; }
+        pre { background: #f8f9fa; padding: 10px; border-radius: 4px; overflow-x: auto; }
+        button { background: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; margin: 5px; }
+    </style>
+</head>
+<body>
+    <h1>🧪 Quick Test - Callback Fix</h1>
+    
+    <div class="test-box info">
+        <h3>Nueva URL API:</h3>
+        <p><code>https://script.google.com/macros/s/AKfycbw0GipKZOWw2fauipNzysmSu016D23YMmVGN2FugBRnTLUGt3lRKlkiNbO_pM4rCq81/exec</code></p>
+    </div>
+
+    <div class="test-box">
+        <button onclick="testConnection()">🔗 Probar Conexión</button>
+        <button onclick="testRegistration()">📝 Probar Registro</button>
+        <button onclick="clearLogs()">🧹 Limpiar Logs</button>
+    </div>
+
+    <div id="results"></div>
+
+    <script>
+        const API_URL = 'https://script.google.com/macros/s/AKfycbw0GipKZOWw2fauipNzysmSu016D23YMmVGN2FugBRnTLUGt3lRKlkiNbO_pM4rCq81/exec';
+        
+        function log(message, type = 'info') {
+            const results = document.getElementById('results');
+            const div = document.createElement('div');
+            div.className = `test-box ${type}`;
+            div.innerHTML = `
+                <small>${new Date().toLocaleTimeString()}</small><br>
+                ${message}
+            `;
+            results.appendChild(div);
+            results.scrollTop = results.scrollHeight;
+        }
+
+        async function makeRequest(url, timeout = 10000) {
+            return new Promise((resolve, reject) => {
+                const callbackMatch = url.match(/callback=([^&]+)/);
+                if (!callbackMatch) {
+                    reject(new Error('No callback found'));
+                    return;
+                }
+                
+                const callbackName = callbackMatch[1];
+                const script = document.createElement('script');
+                
+                console.log('🔗 Callback:', callbackName);
+                console.log('🌐 URL:', url);
+                
+                window[callbackName] = function(response) {
+                    console.log('✅ Response:', response);
+                    document.head.removeChild(script);
+                    delete window[callbackName];
+                    resolve(response);
+                };
+                
+                script.onerror = () => {
+                    console.error('❌ Script error');
+                    if (window[callbackName]) delete window[callbackName];
+                    if (script.parentNode) document.head.removeChild(script);
+                    reject(new Error('Script error'));
+                };
+                
+                script.src = url;
+                document.head.appendChild(script);
+                
+                setTimeout(() => {
+                    if (window[callbackName]) {
+                        console.error('⏰ Timeout');
+                        delete window[callbackName];
+                        if (script.parentNode) document.head.removeChild(script);
+                        reject(new Error('Timeout'));
+                    }
+                }, timeout);
+            });
+        }
+
+        async function testConnection() {
+            log('🔄 Probando conexión...', 'info');
+            
+            try {
+                const callbackName = 'callback_' + Date.now();
+                const url = `${API_URL}?action=checkDni&dni=99999999&callback=${callbackName}`;
+                
+                const response = await makeRequest(url);
+                
+                if (response.status === 'SUCCESS') {
+                    log(`✅ Conexión exitosa!<br><pre>${JSON.stringify(response, null, 2)}</pre>`, 'success');
+                } else {
+                    log(`⚠️ Respuesta inesperada:<br><pre>${JSON.stringify(response, null, 2)}</pre>`, 'error');
+                }
+            } catch (error) {
+                log(`❌ Error de conexión: ${error.message}`, 'error');
+            }
+        }
+
+        async function testRegistration() {
+            log('🔄 Probando registro...', 'info');
+            
+            try {
+                const callbackName = 'callback_' + Date.now();
+                const params = new URLSearchParams({
+                    action: 'registrar',
+                    dni: '36652032',
+                    nombre: 'Test',
+                    apellido: 'Usuario',
+                    fechaNacimiento: '1990-01-01',
+                    email: 'test@example.com',
+                    telefono: '11-1234-5678'
+                });
+                
+                const url = `${API_URL}?${params}&callback=${callbackName}`;
+                
+                const response = await makeRequest(url);
+                
+                if (response.success || response.status === 'SUCCESS') {
+                    log(`✅ Registro exitoso!<br><pre>${JSON.stringify(response, null, 2)}</pre>`, 'success');
+                } else if (response.status === 'DUPLICATE') {
+                    log(`⚠️ DNI duplicado (esperado):<br><pre>${JSON.stringify(response, null, 2)}</pre>`, 'success');
+                } else {
+                    log(`❌ Error en registro:<br><pre>${JSON.stringify(response, null, 2)}</pre>`, 'error');
+                }
+            } catch (error) {
+                log(`❌ Error de registro: ${error.message}`, 'error');
+            }
+        }
+
+        function clearLogs() {
+            document.getElementById('results').innerHTML = '';
+        }
+
+        // Test automático al cargar
+        window.onload = () => {
+            log('🚀 Sistema cargado, listo para tests!', 'info');
+        };
+    </script>
+</body>
+</html>

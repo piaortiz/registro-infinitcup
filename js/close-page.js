@@ -1,5 +1,5 @@
 /**
- * Función para cerrar la página
+ * Función para cerrar la página v4.3
  * Muestra un mensaje de despedida y cierra la ventana
  */
 function closePage() {
@@ -17,43 +17,14 @@ function closePage() {
         </div>
     `;
     
-    // Esperar 3 segundos y luego cerrar la ventana o redirigir
+    // Esperar 3 segundos y luego cerrar la ventana
     setTimeout(() => {
         try {
-            window.close(); // Intenta cerrar la ventana (puede no funcionar en todos los navegadores)
+            window.close(); // Intenta cerrar la ventana
         } catch (e) {
             // Si no se puede cerrar, restauramos el contenido original
             body.innerHTML = originalContent;
             alert('Por favor, cierre esta ventana manualmente.');
         }
     }, 3000);
-}
-
-/**
- * Función para cancelar el registro y volver a la búsqueda
- * Restaura la interfaz a su estado inicial
- */
-function handleCancel() {
-    // Obtener referencias a los elementos
-    const searchSection = document.querySelector('.search-section');
-    const selectedSection = document.getElementById('selectedSection');
-    const message = document.getElementById('message');
-    const searchInput = document.getElementById('searchInput');
-    const registrationForm = document.getElementById('registrationForm');
-    
-    if (searchSection) searchSection.style.display = 'block';
-    if (selectedSection) selectedSection.style.display = 'none';
-    if (message) message.style.display = 'none';
-    if (searchInput) {
-        searchInput.value = '';
-        searchInput.focus();
-    }
-    if (registrationForm) registrationForm.style.display = 'block';
-    
-    // Reiniciar variables globales (si están disponibles en el ámbito global)
-    if (typeof selectedColaborador !== 'undefined') {
-        selectedColaborador = null;
-    }
-    
-    console.log('🔄 Cancelado - Volviendo a búsqueda');
 }
