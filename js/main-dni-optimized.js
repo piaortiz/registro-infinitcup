@@ -157,12 +157,23 @@ async function handleRegistrationSubmit(event) {
     
     elements.submitBtn.disabled = true;
     elements.submitBtn.textContent = 'REGISTRANDO...';
-    showMessage('Procesando registro...', 'info');
+    
+    // Mostrar modal de carga
+    showLoadingModal('Verificando tu DNI...', 'Validando que no esté registrado previamente', 'verifying');
     
     try {
+        // Esperar un momento para mostrar el primer estado
+        await new Promise(resolve => setTimeout(resolve, 800));
+        
+        // Cambiar a estado de procesamiento
+        updateLoadingModal('Procesando registro...', 'Guardando tu información en el sistema', 'processing');
+        
         // Una sola llamada que verifica duplicados Y registra
         const response = await sendRegistration(data);
         console.log('🔍 Respuesta del servidor:', response);
+        
+        // Ocultar modal de carga
+        hideLoadingModal();
         
         if (response.success || response.status === 'SUCCESS') {
             console.log('✅ Registro exitoso');
@@ -176,12 +187,22 @@ async function handleRegistrationSubmit(event) {
         } else {
             console.log('❌ Error en registro:', response);
             showMessage(response.message || 'Error al procesar registro', 'error');
-            elements.submitBtn.disabled = false;
-            elements.submitBtn.textContent = 'REGISTRARSE';
         }
     } catch (error) {
         console.log('❌ Error de conexión:', error);
+        
+        // Mostrar estado de error en el modal antes de ocultar
+        updateLoadingModal('Error de conexión', 'No se pudo conectar con el servidor', 'error');
+        
+        // Esperar un momento para que el usuario vea el error
+        await new Promise(resolve => setTimeout(resolve, 1500));
+        
+        // Ocultar modal de carga
+        hideLoadingModal();
+        
         showMessage('Error al procesar. Intenta nuevamente.', 'error');
+    } finally {
+        // Restaurar estado del botón
         elements.submitBtn.disabled = false;
         elements.submitBtn.textContent = 'REGISTRARSE';
     }
@@ -373,4 +394,70 @@ function showSuccessMessage(nombre, apellido) {
     setTimeout(() => {
         successModal.querySelector('#closeSuccessBtn').focus();
     }, 500);
+}
+
+// ===== MODAL DE CARGA =====
+function showLoadingModal(title = 'Verificando datos...', message = 'Por favor espera mientras procesamos tu información', state = 'verifying') {
+    const loadingModal = document.getElementById('loadingModal');
+    const loadingTitle = document.getElementById('loadingTitle');
+    const loadingMessage = document.getElementById('loadingMessage');
+    const loadingContent = loadingModal?.querySelector('.loading-content');
+    
+    if (loadingModal && loadingTitle && loadingMessage && loadingContent) {
+        loadingTitle.textContent = title;
+        loadingMessage.textContent = message;
+        
+        // Limpiar estados anteriores
+        loadingContent.classList.remove('verifying', 'processing', 'error');
+        // Agregar nuevo estado
+        loadingContent.classList.add(state);
+        
+        loadingModal.style.display = 'flex';
+        
+        // Prevenir scroll del body
+        document.body.style.overflow = 'hidden';
+        
+        console.log('🔄 Modal de carga mostrado:', title, `(${state})`);
+    }
+}
+
+function hideLoadingModal() {
+    const loadingModal = document.getElementById('loadingModal');
+    
+    if (loadingModal) {
+        loadingModal.style.display = 'none';
+        
+        // Restaurar scroll del body
+        document.body.style.overflow = '';
+        
+        console.log('✅ Modal de carga oculto');
+    }
+}
+
+function updateLoadingModal(title, message, state = 'processing') {
+    const loadingTitle = document.getElementById('loadingTitle');
+    const loadingMessage = document.getElementById('loadingMessage');
+    const loadingModal = document.getElementById('loadingModal');
+    const loadingContent = loadingModal?.querySelector('.loading-content');
+    
+    if (loadingTitle && loadingMessage && loadingContent) {
+        // Animación suave al cambiar
+        loadingTitle.style.opacity = '0.5';
+        loadingMessage.style.opacity = '0.5';
+        
+        setTimeout(() => {
+            loadingTitle.textContent = title;
+            loadingMessage.textContent = message;
+            
+            // Cambiar estado visual
+            loadingContent.classList.remove('verifying', 'processing', 'error');
+            loadingContent.classList.add(state);
+            
+            // Restaurar opacidad
+            loadingTitle.style.opacity = '1';
+            loadingMessage.style.opacity = '1';
+        }, 150);
+        
+        console.log('🔄 Modal de carga actualizado:', title, `(${state})`);
+    }
 }
