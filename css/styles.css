@@ -1161,6 +1161,38 @@ body {
     box-shadow: 0 2px 8px rgba(108, 117, 125, 0.5);
 }
 
+/* Estilo específico para el botón volver */
+.btn-back {
+    background: #6c757d; /* Color gris plano */
+    color: white;
+    border: none;
+    border-radius: 16px;
+    padding: 8px 16px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    min-height: 40px;
+    order: 2;
+    /* Para asegurar que no herede estilos de otros botones */
+    background-image: none;
+    margin: 5px 10px;
+}
+
+.btn-back:hover {
+    background: #5a6268;
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.25);
+}
+
+.btn-back:active {
+    background: #495057;
+    transform: translateY(0);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
 @media (max-width: 768px) {
     .btn-secondary:hover {
         background: #5a6268;
