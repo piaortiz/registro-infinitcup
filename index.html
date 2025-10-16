@@ -42,7 +42,6 @@
                 <div id="dniScreen" class="screen">
                     <div class="dni-section">
                         <h2 class="content-title">Participa de los sorteos</h2>
-                        <p class="content-subtitle">Ingresa tu DNI</p>
                         <div class="dni-input-container">
                             <input 
                                 type="text" 
@@ -55,7 +54,7 @@
                                 aria-describedby="dni-help"
                                 aria-required="true"
                             >
-                            <div id="dni-help" class="form-help">Ingresa tu número de DNI sin puntos (7-8 dígitos)</div>
+                            <div id="dni-help" class="form-help">Ingresa tu número de DNI sin puntos</div>
                             <button type="button" id="checkDniBtn" class="btn btn-primary">
                                 CONTINUAR
                             </button>
@@ -66,9 +65,8 @@
                 <!-- PANTALLA 2: Formulario de registro -->
                 <div id="registrationScreen" class="screen" style="display: none;">
                     <div class="registration-header">
-                        <h2 class="content-title">Completar Registro</h2>
-                        <p class="content-subtitle">Complete sus datos para participar del sorteo:</p>
-                        <div class="dni-display">
+                        <h2 class="content-title">Complete sus datos</h2>
+                            <div class="dni-display">
                             <strong>DNI: <span id="displayDni"></span></strong>
                         </div>
                     </div>
@@ -77,11 +75,11 @@
                     <form id="registrationForm">
                         <div class="form-group">
                             <label for="nombreInput" class="form-label">Nombre:</label>
-                            <input type="text" id="nombreInput" class="form-input" placeholder="Ej: Juan Carlos" required>
+                            <input type="text" id="nombreInput" class="form-input" placeholder="Ej: Jamie" required>
                         </div>
                         <div class="form-group">
                             <label for="apellidoInput" class="form-label">Apellido:</label>
-                            <input type="text" id="apellidoInput" class="form-input" placeholder="Ej: Pérez González" required>
+                            <input type="text" id="apellidoInput" class="form-input" placeholder="Ej: Adeyemi" required>
                         </div>
                         <div class="form-group">
                             <label for="fechaNacimientoInput" class="form-label">Fecha de Nacimiento:</label>
@@ -89,7 +87,7 @@
                         </div>
                         <div class="form-group">
                             <label for="emailInput" class="form-label">Email:</label>
-                            <input type="email" id="emailInput" class="form-input" placeholder="Ej: juan@email.com" required>
+                            <input type="email" id="emailInput" class="form-input" placeholder="Ej: jamie@email.com" required>
                         </div>
                         <div class="form-group">
                             <label for="telefonoInput" class="form-label">Teléfono:</label>
