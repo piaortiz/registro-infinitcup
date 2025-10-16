@@ -550,7 +550,7 @@ body {
 
 @media (max-width: 480px) {
     .footer {
-        padding: 12px;
+        padding: 10px;
         display: flex !important;
         visibility: visible !important;
         position: fixed;
@@ -558,6 +558,7 @@ body {
         left: 0;
         right: 0;
         z-index: 1000;
+        height: auto;
     }
 }
 
@@ -1094,29 +1095,34 @@ body {
     color: var(--color-white);
     border: none;
     order: 1;
-    border-radius: 25px;
-    font-size: var(--font-size-md);
+    border-radius: 20px;
+    font-size: var(--font-size-sm);
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    box-shadow: 0 4px 12px rgba(0, 172, 153, 0.3);
+    box-shadow: 0 4px 12px rgba(147, 12, 188, 0.3);
+    padding: 10px 20px;
+    min-height: 46px;
 }
 
 @media (max-width: 768px) {
     .btn-primary {
         background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-secondary) 50%, var(--color-accent) 100%);
-        border-radius: 25px;
-        font-size: 16px;
+        border-radius: 18px;
+        font-size: 14px;
         font-weight: 600;
         text-transform: uppercase;
         letter-spacing: 0.5px;
+        padding: 8px 16px;
+        min-height: 42px;
+        box-shadow: 0 3px 10px rgba(147, 12, 188, 0.4);
     }
 }
 
 .btn-primary:hover {
     background: linear-gradient(135deg, var(--color-accent) 0%, var(--color-secondary) 50%, var(--color-primary) 100%);
     transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(18, 35, 212, 0.4);
+    box-shadow: 0 4px 12px rgba(147, 12, 188, 0.5);
 }
 
 @media (max-width: 768px) {
@@ -1128,29 +1134,31 @@ body {
 }
 
 .btn-secondary {
-    background: linear-gradient(135deg, #2c3e50, #1c2e40);
+    background: linear-gradient(135deg, #6c757d, #495057);
     color: var(--color-white);
     border: none;
     order: 2;
-    border-radius: 25px;
-    font-size: var(--font-size-md);
+    border-radius: 20px;
+    font-size: var(--font-size-sm);
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    box-shadow: 0 4px 12px rgba(52, 73, 94, 0.4);
+    box-shadow: 0 4px 12px rgba(108, 117, 125, 0.3);
     transition: all 0.3s ease;
+    padding: 10px 20px;
+    min-height: 46px;
 }
 
 .btn-secondary:hover {
-    background: linear-gradient(135deg, #1c2e40, #2c3e50);
-    box-shadow: 0 6px 16px rgba(52, 73, 94, 0.6);
+    background: linear-gradient(135deg, #5a6268, #6c757d);
+    box-shadow: 0 4px 12px rgba(108, 117, 125, 0.5);
     transform: translateY(-2px);
 }
 
 .btn-secondary:active {
-    background: #1c2e40;
+    background: #495057;
     transform: translateY(0);
-    box-shadow: 0 2px 8px rgba(44, 62, 80, 0.5);
+    box-shadow: 0 2px 8px rgba(108, 117, 125, 0.5);
 }
 
 @media (max-width: 768px) {
@@ -1362,9 +1370,9 @@ body {
 .btn {
     color: var(--color-white);
     border: none;
-    padding: var(--space-lg) var(--space-xl);
-    border-radius: 25px;
-    font-size: var(--font-size-md);
+    padding: var(--space-md) var(--space-lg);
+    border-radius: 20px;
+    font-size: var(--font-size-sm);
     font-weight: 600;
     cursor: pointer;
     transition: all 0.3s ease;
@@ -1372,7 +1380,7 @@ body {
     font-family: 'Kanit', sans-serif;
     -webkit-tap-highlight-color: transparent;
     touch-action: manipulation;
-    min-height: 54px;
+    min-height: 48px;
     text-transform: uppercase;
     letter-spacing: 0.5px;
     width: 100%;
@@ -1382,18 +1390,19 @@ body {
 /* Responsive para botones */
 @media (max-width: var(--breakpoint-md)) {
     .btn {
-        padding: var(--space-md) var(--space-lg);
-        border-radius: 25px;
-        font-size: var(--font-size-md);
-        min-height: 50px;
+        padding: var(--space-sm) var(--space-md);
+        border-radius: 18px;
+        font-size: var(--font-size-sm);
+        min-height: 44px;
     }
 }
 
 @media (max-width: var(--breakpoint-sm)) {
     .btn {
-        padding: var(--space-sm) var(--space-md);
-        font-size: var(--font-size-sm);
-        min-height: 48px;
+        padding: calc(var(--space-xs) + 2px) var(--space-sm);
+        font-size: var(--font-size-xs);
+        min-height: 40px;
+        border-radius: 16px;
     }
 }
 
@@ -2050,7 +2059,7 @@ body {
 }
 
 /* Botón de verificar DNI */
-#checkDniBtn {
+#checkDniBtn, #submitBtn, #backBtn {
     background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-secondary) 50%, var(--color-accent) 100%);
     color: white;
     border: none;
@@ -2320,9 +2329,9 @@ body.hide-header .header {
 /* Pantalla 2: Formulario de registro */
 .registration-header {
     text-align: center;
-    padding: 25px 20px;
+    padding: 20px 15px;
     margin-bottom: 25px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-secondary) 50%, var(--color-accent) 100%);
     color: white;
     border-radius: 15px;
     margin-top: 20px;
@@ -2346,9 +2355,12 @@ body.hide-header .already-registered {
     margin-bottom: 10px;
 }
 
-.registration-header .content-subtitle {
-    color: rgba(255, 255, 255, 0.9);
+/* Estilos del título */
+.registration-header .content-title {
+    color: white;
     margin-bottom: 15px;
+    font-size: 1.5rem;
+    letter-spacing: 0.5px;
 }
 
 .dni-display {
@@ -2356,7 +2368,10 @@ body.hide-header .already-registered {
     padding: 10px 20px;
     border-radius: 10px;
     display: inline-block;
-    font-size: 1.1rem;
+    font-size: 1.2rem;
+    font-weight: 500;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    letter-spacing: 0.5px;
 }
 
 /* Pantalla 3: Ya registrado */
@@ -2378,14 +2393,23 @@ body.hide-header .already-registered {
 /* Navegación entre pantallas */
 .form-actions {
     display: flex;
-    gap: 15px;
-    margin-top: 30px;
+    gap: 6px; /* Espacio reducido entre botones */
+    margin-top: 20px;
     flex-wrap: wrap;
+    margin-bottom: 100px; /* Espacio para evitar superposición con el footer */
+    justify-content: center;
+    align-items: center;
+    text-align: center;
 }
 
 .form-actions .btn {
-    flex: 1;
-    min-width: 140px;
+    flex: 0 0 auto;
+    min-width: 120px;
+    max-width: 160px;
+    width: 45%;
+    margin-bottom: 5px;
+    margin-left: 4px;
+    margin-right: 4px;
 }
 
 /* Animaciones de transición */
@@ -2430,13 +2454,20 @@ body.hide-header .already-registered {
     }
     
     .form-actions {
-        flex-direction: column;
-        gap: 10px;
+        flex-direction: row; /* Mantener en fila para centrar mejor */
+        gap: 6px;
+        margin-bottom: 140px; /* Más espacio en móviles para el footer */
+        padding-bottom: 20px;
+        justify-content: center;
     }
     
     .form-actions .btn {
         width: 100%;
         min-width: auto;
+        max-width: none;
+        font-size: 0.95rem;
+        padding: 10px 15px;
+        margin-bottom: 4px;
     }
 }
 
@@ -2446,8 +2477,9 @@ body.hide-header .already-registered {
     }
     
     .registration-header {
-        padding: 15px;
-        margin: 0 -5px 15px -5px;
+        padding: 12px;
+        margin: 0 -5px 12px -5px;
+        border-radius: 8px;
     }
     
     .registration-header .content-title {
