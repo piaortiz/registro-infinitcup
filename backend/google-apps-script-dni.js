@@ -257,16 +257,22 @@ function findRegistroByDni(dni) {
     for (let i = 1; i < data.length; i++) {
       if (data[i][0] && data[i][0].toString() === dni.toString()) {
         // Verificar que esté activo
-        const estado = data[i][10]; // Columna estado
+        const estado = data[i][9]; // Columna estado (ajustada por unificación)
         if (!estado || estado === 'ACTIVO') {
+          // Separar nombre completo en nombre y apellido
+          const nombreCompleto = data[i][1] || '';
+          const partesNombre = nombreCompleto.trim().split(' ');
+          const apellido = partesNombre.length > 1 ? partesNombre.pop() : '';
+          const nombre = partesNombre.join(' ') || nombreCompleto;
+          
           return {
             dni: data[i][0],
-            nombre: data[i][1],
-            apellido: data[i][2],
-            fechaNacimiento: data[i][3],
-            email: data[i][4],
-            telefono: data[i][5],
-            fechaInscripcion: data[i][9]
+            nombre: nombre,
+            apellido: apellido,
+            fechaNacimiento: data[i][2],
+            email: data[i][3],
+            telefono: data[i][4],
+            fechaInscripcion: data[i][8]
           };
         }
       }
@@ -289,7 +295,7 @@ function isAlreadyRegistrado(dni) {
     for (let i = 1; i < data.length; i++) {
       if (data[i][0] && data[i][0].toString() === dni.toString()) {
         // Verificar que la inscripción esté activa
-        const estado = data[i][10]; // Columna estado
+        const estado = data[i][9]; // Columna estado (ajustada por unificación)
         if (!estado || estado === 'ACTIVO') {
           return true;
         }
@@ -330,18 +336,19 @@ function saveToRegistros(data) {
     // Crear headers si es necesario
     if (sheet.getLastRow() === 0) {
       const headers = [
-        'DNI', 'Nombre', 'Apellido', 'Fecha Nacimiento', 'Email', 'Teléfono', 
+        'DNI', 'Nombre y Apellido', 'Fecha Nacimiento', 'Email', 'Teléfono', 
         'Fecha Evento', 'Hora Evento', 'IP Address', 'Timestamp Inscripción', 'Estado'
       ];
       sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
       formatHeaders(sheet, headers.length);
     }
     
-    // Preparar fila de datos
+    // Preparar fila de datos con nombre completo
+    const nombreCompleto = `${data.nombre} ${data.apellido}`.trim();
+    
     const rowData = [
       data.dni,
-      data.nombre,
-      data.apellido,
+      nombreCompleto,
       data.fechaNacimiento,
       data.email,
       data.telefono,
@@ -484,7 +491,7 @@ function setupSheets() {
     
     if (registrosSheet.getLastRow() === 0) {
       const registrosHeaders = [
-        'DNI', 'Nombre', 'Apellido', 'Fecha Nacimiento', 'Email', 'Teléfono', 
+        'DNI', 'Nombre y Apellido', 'Fecha Nacimiento', 'Email', 'Teléfono', 
         'Fecha Evento', 'Hora Evento', 'IP Address', 'Timestamp Registro', 'Estado'
       ];
       registrosSheet.getRange(1, 1, 1, registrosHeaders.length).setValues([registrosHeaders]);

@@ -42,8 +42,7 @@ function initializeElements() {
         checkDniBtn: document.getElementById('checkDniBtn'),
         displayDni: document.getElementById('displayDni'),
         registrationForm: document.getElementById('registrationForm'),
-        nombreInput: document.getElementById('nombreInput'),
-        apellidoInput: document.getElementById('apellidoInput'),
+        nombreCompletoInput: document.getElementById('nombreCompletoInput'),
         fechaNacimientoInput: document.getElementById('fechaNacimientoInput'),
         emailInput: document.getElementById('emailInput'),
         telefonoInput: document.getElementById('telefonoInput'),
@@ -79,7 +78,7 @@ function goToRegistrationForm(dni) {
     currentDni = dni;
     elements.displayDni.textContent = dni;
     showScreen(SCREENS.REGISTRATION);
-    setTimeout(() => elements.nombreInput?.focus(), 100);
+    setTimeout(() => elements.nombreCompletoInput?.focus(), 100);
 }
 
 function goToAlreadyRegistered(data) {
@@ -124,7 +123,7 @@ async function handleCheckDni() {
     const dni = elements.dniInput?.value?.trim();
     
     if (!validateDniArgentino(dni)) {
-        showMessage('Ingresa un DNI argentino válido (7-8 números)', 'error');
+        showMessage('Ingresá un DNI argentino válido (7-8 números).', 'error');
         return;
     }
     
@@ -145,10 +144,16 @@ async function handleRegistrationSubmit(event) {
     
     if (!validatePersonalData()) return;
     
+    // Separar nombre completo en nombre y apellido
+    const nombreCompleto = elements.nombreCompletoInput.value.trim();
+    const partesNombre = nombreCompleto.split(' ');
+    const apellido = partesNombre.length > 1 ? partesNombre.pop() : '';
+    const nombre = partesNombre.join(' ') || nombreCompleto;
+    
     const data = {
         dni: currentDni,
-        nombre: elements.nombreInput.value.trim(),
-        apellido: elements.apellidoInput.value.trim(),
+        nombre: nombre,
+        apellido: apellido,
         fechaNacimiento: elements.fechaNacimientoInput.value,
         email: elements.emailInput.value.trim(),
         telefono: elements.telefonoInput.value.trim(),
@@ -159,14 +164,14 @@ async function handleRegistrationSubmit(event) {
     elements.submitBtn.textContent = 'REGISTRANDO...';
     
     // Mostrar modal de carga
-    showLoadingModal('Verificando tu DNI...', 'Validando que no esté registrado previamente', 'verifying');
+    showLoadingModal('Verificando tu DNI...', 'Validando que no esté registrado previamente.', 'verifying');
     
     try {
         // Esperar un momento para mostrar el primer estado
         await new Promise(resolve => setTimeout(resolve, 800));
         
         // Cambiar a estado de procesamiento
-        updateLoadingModal('Procesando registro...', 'Guardando tu información en el sistema', 'processing');
+        updateLoadingModal('Procesando registro...', 'Guardando tu información en el sistema.', 'processing');
         
         // Una sola llamada que verifica duplicados Y registra
         const response = await sendRegistration(data);
@@ -178,21 +183,21 @@ async function handleRegistrationSubmit(event) {
         if (response.success || response.status === 'SUCCESS') {
             console.log('✅ Registro exitoso');
             clearMessage();
-            showSuccessMessage(data.nombre, data.apellido);
+            showSuccessMessage(nombre, apellido);
         } else if (response.status === 'DUPLICATE') {
             // DNI ya registrado
             console.log('⚠️ DNI duplicado');
-            showMessage('Este DNI ya está registrado. Recorda que el ganador debe estar presente en el evento', 'warning');
+            showMessage('Este DNI ya está registrado. Recordá que el ganador debe estar presente en el evento.', 'warning');
             goToAlreadyRegistered(response.existingData);
         } else {
             console.log('❌ Error en registro:', response);
-            showMessage(response.message || 'Error al procesar registro', 'error');
+            showMessage(response.message || 'Error al procesar el registro.', 'error');
         }
     } catch (error) {
         console.log('❌ Error de conexión:', error);
         
         // Mostrar estado de error en el modal antes de ocultar
-        updateLoadingModal('Error de conexión', 'No se pudo conectar con el servidor', 'error');
+        updateLoadingModal('Error de conexión', 'No se pudo conectar con el servidor.', 'error');
         
         // Esperar un momento para que el usuario vea el error
         await new Promise(resolve => setTimeout(resolve, 1500));
@@ -200,7 +205,7 @@ async function handleRegistrationSubmit(event) {
         // Ocultar modal de carga
         hideLoadingModal();
         
-        showMessage('Error al procesar. Intenta nuevamente.', 'error');
+        showMessage('Error al procesar. Intentá nuevamente.', 'error');
     } finally {
         // Restaurar estado del botón
         elements.submitBtn.disabled = false;
@@ -230,11 +235,10 @@ function validateDniArgentino(dni) {
 
 function validatePersonalData() {
     const fields = [
-        { element: elements.nombreInput, message: 'Ingresa tu nombre' },
-        { element: elements.apellidoInput, message: 'Ingresa tu apellido' },
-        { element: elements.fechaNacimientoInput, message: 'Ingresa tu fecha de nacimiento' },
-        { element: elements.emailInput, message: 'Ingresa un email válido' },
-        { element: elements.telefonoInput, message: 'Ingresa tu teléfono' }
+        { element: elements.nombreCompletoInput, message: 'Ingresá tu nombre y apellido.' },
+        { element: elements.fechaNacimientoInput, message: 'Ingresá tu fecha de nacimiento.' },
+        { element: elements.emailInput, message: 'Ingresá un email válido.' },
+        { element: elements.telefonoInput, message: 'Ingresá tu teléfono.' }
     ];
     
     for (const field of fields) {
@@ -245,14 +249,22 @@ function validatePersonalData() {
         }
     }
     
+    // Validar que tenga al menos nombre y apellido (mínimo 2 palabras)
+    const nombreCompleto = elements.nombreCompletoInput.value.trim();
+    if (nombreCompleto.split(' ').filter(word => word.length > 0).length < 2) {
+        showMessage('Ingresá tu nombre y apellido completos.', 'error');
+        elements.nombreCompletoInput.focus();
+        return false;
+    }
+    
     if (!validateEmail(elements.emailInput.value)) {
-        showMessage('Ingresa un email válido', 'error');
+        showMessage('Ingresá un email válido.', 'error');
         elements.emailInput.focus();
         return false;
     }
     
     if (!elements.participantConfirms?.checked) {
-        showMessage('Debes confirmar tu participación', 'error');
+        showMessage('Debés confirmar tu participación.', 'error');
         return false;
     }
     
@@ -371,7 +383,7 @@ function showSuccessMessage(nombre, apellido) {
             <h2>Registro Exitoso</h2>
             <div class="success-details">
                 <p><strong>${nombre} ${apellido}</strong></p>
-                <p>Tu registro ha sido completado correctamente<br>Recorda que el ganador tiene que estar presente en el evento</p>
+                <p>Tu registro ha sido completado correctamente.<br>Recordá que el ganador debe estar presente en el evento.</p>
             </div>
             <div class="success-actions">
                 <button type="button" class="btn btn-success-primary" id="closeSuccessBtn">CERRAR</button>
