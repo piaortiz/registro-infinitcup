@@ -174,6 +174,7 @@ async function handleRegistrationSubmit(event) {
         // Una sola llamada que verifica duplicados Y registra
         const response = await sendRegistration(data);
         console.log('🔍 Respuesta del servidor:', response);
+        console.log('🔍 Respuesta completa:', JSON.stringify(response, null, 2));
         
         // Ocultar modal de carga
         hideLoadingModal();
@@ -189,6 +190,8 @@ async function handleRegistrationSubmit(event) {
             goToAlreadyRegistered(response.existingData);
         } else {
             console.log('❌ Error en registro:', response);
+            console.log('❌ Error mensaje:', response.message);
+            console.log('❌ Error status:', response.status);
             showMessage(response.message || 'Error al procesar el registro.', 'error');
         }
     } catch (error) {
