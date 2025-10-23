@@ -8,8 +8,8 @@ window.APP_CONFIG = {
     // Configuración de entorno
     environment: 'github-pages', // 'github-pages' o 'production'
     
-    // URLs de APIs - ACTUALIZADA v4.3 (con correcciones de callback)
-    apiUrl: 'https://script.google.com/macros/s/AKfycbw0GipKZOWw2fauipNzysmSu016D23YMmVGN2FugBRnTLUGt3lRKlkiNbO_pM4rCq81/exec',
+    // URLs de APIs - ACTUALIZADA v6.1 (nombreCompleto fix)
+    apiUrl: 'https://script.google.com/macros/s/AKfycbwf-1NsI6gyUqR9_Bk_N5B06R9CiY05Rfn9K2xHao7UfZJS2e3OLlmAqONzBc9noo4A/exec',
     
     // GitHub Pages info
     githubPagesUrl: 'https://piaortiz.github.io/registro-infinitcup',
