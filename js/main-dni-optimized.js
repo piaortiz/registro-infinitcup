@@ -82,7 +82,7 @@ function goToRegistrationForm(dni) {
 }
 
 function goToAlreadyRegistered(data) {
-    elements.existingParticipantName.textContent = `${data.nombre} ${data.apellido}`;
+    elements.existingParticipantName.textContent = data.nombre || data.nombreCompleto || '';
     elements.existingParticipantDni.textContent = `DNI: ${data.dni}`;
     showScreen(SCREENS.ALREADY_REGISTERED);
 }
@@ -144,16 +144,14 @@ async function handleRegistrationSubmit(event) {
     
     if (!validatePersonalData()) return;
     
-    // Separar nombre completo en nombre y apellido
+    // Obtener nombre completo sin separar
     const nombreCompleto = elements.nombreCompletoInput.value.trim();
-    const partesNombre = nombreCompleto.split(' ');
-    const apellido = partesNombre.length > 1 ? partesNombre.pop() : '';
-    const nombre = partesNombre.join(' ') || nombreCompleto;
+    
+    console.log('📝 Datos a enviar - nombreCompleto:', nombreCompleto);
     
     const data = {
         dni: currentDni,
-        nombre: nombre,
-        apellido: apellido,
+        nombreCompleto: nombreCompleto,
         fechaNacimiento: elements.fechaNacimientoInput.value,
         email: elements.emailInput.value.trim(),
         telefono: elements.telefonoInput.value.trim(),
@@ -183,7 +181,7 @@ async function handleRegistrationSubmit(event) {
         if (response.success || response.status === 'SUCCESS') {
             console.log('✅ Registro exitoso');
             clearMessage();
-            showSuccessMessage(nombre, apellido);
+            showSuccessMessage(nombreCompleto);
         } else if (response.status === 'DUPLICATE') {
             // DNI ya registrado
             console.log('⚠️ DNI duplicado');
@@ -334,6 +332,8 @@ async function sendRegistration(data, retries = 2) {
                 ...data
             };
             
+            console.log('📤 Datos a enviar:', JSON.stringify(requestData, null, 2));
+            
             const params = new URLSearchParams(requestData);
             const url = `${CONFIG.apiUrl}?${params}&callback=${callbackName}`;
             
@@ -364,8 +364,8 @@ function clearMessage() {
 }
 
 // ===== PANTALLA DE ÉXITO =====
-function showSuccessMessage(nombre, apellido) {
-    console.log('🎉 Mostrando modal de éxito para:', nombre, apellido);
+function showSuccessMessage(nombreCompleto) {
+    console.log('🎉 Mostrando modal de éxito para:', nombreCompleto);
     
     // Ocultar header
     document.body.classList.add('hide-header');
@@ -382,7 +382,7 @@ function showSuccessMessage(nombre, apellido) {
             </div>
             <h2>Registro Exitoso</h2>
             <div class="success-details">
-                <p><strong>${nombre} ${apellido}</strong></p>
+                <p><strong>${nombreCompleto}</strong></p>
                 <p>Tu registro ha sido completado correctamente.<br>Recordá que el ganador debe estar presente en el evento.</p>
             </div>
             <div class="success-actions">

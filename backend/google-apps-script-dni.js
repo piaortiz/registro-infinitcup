@@ -1,6 +1,6 @@
 /**
  * GOOGLE APPS SCRIPT - SISTEMA DE REGISTRO POR DNI - GITHUB PAGES COMPATIBLE
- * Casino Magic - Eventos v4.2
+ * Casino Magic - Eventos v6
  * Autor: Pia Ortiz
  * 
  * INSTRUCCIONES DE CONFIGURACIÓN:
@@ -76,13 +76,14 @@ function doGet(e) {
 // ===== NUEVA FUNCIÓN: REGISTRAR CON VERIFICACIÓN =====
 function handleRegistrarConVerificacion(params) {
   console.log('🔄 Procesando registro con verificación para DNI:', params.dni);
+  console.log('📥 Parámetros recibidos:', JSON.stringify(params));
   
   try {
     // Validar datos requeridos
-    if (!params.dni || !params.nombre || !params.apellido) {
+    if (!params.dni || !params.nombreCompleto) {
       return {
         status: 'ERROR',
-        message: 'DNI, nombre y apellido son requeridos'
+        message: 'DNI y nombre completo son requeridos'
       };
     }
     
@@ -96,8 +97,7 @@ function handleRegistrarConVerificacion(params) {
         message: 'Este DNI ya está registrado al evento',
         existingData: {
           dni: existingRegistro.dni,
-          nombre: existingRegistro.nombre,
-          apellido: existingRegistro.apellido,
+          nombre: existingRegistro.nombreCompleto,
           fechaInscripcion: existingRegistro.fechaInscripcion
         }
       };
@@ -106,8 +106,7 @@ function handleRegistrarConVerificacion(params) {
     // Si no existe, proceder con el registro
     const inscriptionData = {
       dni: params.dni,
-      nombre: params.nombre,
-      apellido: params.apellido,
+      nombreCompleto: params.nombreCompleto,
       fechaNacimiento: params.fechaNacimiento,
       email: params.email || '',
       telefono: params.telefono || '',
@@ -127,7 +126,7 @@ function handleRegistrarConVerificacion(params) {
         message: 'Registro completado exitosamente',
         data: {
           dni: inscriptionData.dni,
-          nombre: `${inscriptionData.nombre} ${inscriptionData.apellido}`,
+          nombre: inscriptionData.nombreCompleto,
           timestamp: inscriptionData.timestamp
         }
       };
@@ -186,10 +185,10 @@ function handleInscribir(params) {
   
   try {
     // Validar datos requeridos
-    if (!params.dni || !params.nombre || !params.apellido) {
+    if (!params.dni || !params.nombreCompleto) {
       return {
         status: 'ERROR',
-        message: 'DNI, nombre y apellido son requeridos'
+        message: 'DNI y nombre completo son requeridos'
       };
     }
     
@@ -204,8 +203,7 @@ function handleInscribir(params) {
     // Procesar registro
     const inscriptionData = {
       dni: params.dni,
-      nombre: params.nombre,
-      apellido: params.apellido,
+      nombreCompleto: params.nombreCompleto,
       fechaNacimiento: params.fechaNacimiento,
       email: params.email || '',
       telefono: params.telefono || '',
@@ -225,7 +223,7 @@ function handleInscribir(params) {
         message: 'Registro completado exitosamente',
         data: {
           dni: inscriptionData.dni,
-          nombre: `${inscriptionData.nombre} ${inscriptionData.apellido}`,
+          nombre: inscriptionData.nombreCompleto,
           timestamp: inscriptionData.timestamp
         }
       };
@@ -259,16 +257,9 @@ function findRegistroByDni(dni) {
         // Verificar que esté activo
         const estado = data[i][9]; // Columna estado (ajustada por unificación)
         if (!estado || estado === 'ACTIVO') {
-          // Separar nombre completo en nombre y apellido
-          const nombreCompleto = data[i][1] || '';
-          const partesNombre = nombreCompleto.trim().split(' ');
-          const apellido = partesNombre.length > 1 ? partesNombre.pop() : '';
-          const nombre = partesNombre.join(' ') || nombreCompleto;
-          
           return {
             dni: data[i][0],
-            nombre: nombre,
-            apellido: apellido,
+            nombreCompleto: data[i][1] || '',
             fechaNacimiento: data[i][2],
             email: data[i][3],
             telefono: data[i][4],
@@ -343,12 +334,12 @@ function saveToRegistros(data) {
       formatHeaders(sheet, headers.length);
     }
     
-    // Preparar fila de datos con nombre completo
-    const nombreCompleto = `${data.nombre} ${data.apellido}`.trim();
+    // Preparar fila de datos
+    console.log('📝 Guardando - DNI:', data.dni, '| nombreCompleto:', data.nombreCompleto);
     
     const rowData = [
       data.dni,
-      nombreCompleto,
+      data.nombreCompleto,
       data.fechaNacimiento,
       data.email,
       data.telefono,
