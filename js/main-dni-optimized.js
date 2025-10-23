@@ -12,7 +12,7 @@
 
 // Usar configuración global o fallback
 const CONFIG = window.APP_CONFIG || {
-    apiUrl: 'https://script.google.com/macros/s/AKfycbw0gCV_b_vXkwI-utkTpN8mLexTxxlSc74au7dhuho74zOdrCEtYECSgmQOsquGKOMV/exec',
+    apiUrl: 'https://script.google.com/macros/s/AKfycbwf-1NsI6gyUqR9_Bk_N5B06R9CiY05Rfn9K2xHao7UfZJS2e3OLlmAqONzBc9noo4A/exec',
     demoMode: false
 };
 
