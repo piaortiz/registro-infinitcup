@@ -25,19 +25,11 @@ function closePage() {
             console.log('No se pudo cerrar la ventana automáticamente');
         }
         
-        // Fallback: Si no se pudo cerrar, restaurar y resetear
+        // Fallback: Si no se pudo cerrar, redirigir a Casino Magic
         setTimeout(() => {
             if (!document.hidden) {
-                // Restaurar contenido original
-                body.innerHTML = originalContent;
-                
-                // Si existe la función resetApplicationToStart, usarla
-                if (typeof resetApplicationToStart === 'function') {
-                    resetApplicationToStart();
-                } else {
-                    // Fallback básico: recargar la página
-                    window.location.reload();
-                }
+                console.log('🌐 No se pudo cerrar automáticamente - redirigiendo a Casino Magic');
+                window.location.href = 'https://casinomagic.com.ar/';
             }
         }, 1000);
     }, 3000);
