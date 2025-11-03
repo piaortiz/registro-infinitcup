@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test - Funcionalidad de Cerrar</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .test-container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        .test-button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 10px 5px;
+            font-size: 14px;
+        }
+        .test-button:hover {
+            background: #0056b3;
+        }
+        .result {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .warning { background: #fff3cd; color: #856404; border: 1px solid #ffeaa7; }
+        .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .info { background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+        
+        .mock-success-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+        
+        .mock-success-content {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+        
+        .checkmark {
+            font-size: 48px;
+            color: #28a745;
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🧪 Test de Funcionalidad de Cerrar</h1>
+        <p>Este test simula el comportamiento del botón "FINALIZAR" después de un registro exitoso.</p>
+        
+        <div class="test-section">
+            <h3>Escenarios de Prueba:</h3>
+            
+            <button class="test-button" onclick="testCloseSuccess()">
+                ✅ Simular Cierre Exitoso
+            </button>
+            
+            <button class="test-button" onclick="testCloseFallback()">
+                🔄 Simular Cierre Fallido (Fallback)
+            </button>
+            
+            <button class="test-button" onclick="testDirectReset()">
+                🎯 Probar Reset Directo
+            </button>
+            
+            <button class="test-button" onclick="clearTests()">
+                🧹 Limpiar Tests
+            </button>
+        </div>
+        
+        <div id="testResults"></div>
+    </div>
+
+    <!-- Modal simulado de éxito -->
+    <div id="mockSuccessModal" class="mock-success-modal">
+        <div class="mock-success-content">
+            <div class="checkmark">✓</div>
+            <h2>Registro Exitoso</h2>
+            <div class="success-details">
+                <p><strong>Juan Test Pérez</strong></p>
+                <p>Tu registro ha sido completado correctamente.<br>Recordá que el ganador debe estar presente en el evento.</p>
+            </div>
+            <div class="success-actions">
+                <button type="button" class="test-button" id="mockCloseBtn">FINALIZAR</button>
+                <p style="margin-top: 10px; font-size: 0.9em; color: #666;">El registro está completo. Al hacer clic se cerrará la aplicación.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Variables de estado del test
+        let testState = {
+            currentDni: null,
+            formData: {},
+            windowCloseAttempts: 0
+        };
+
+        // Simular elementos del DOM principales
+        const elements = {
+            dniInput: { value: '', focus: () => log('📍 Foco en campo DNI') },
+            registrationForm: { reset: () => log('🔄 Formulario reseteado') },
+            displayDni: { textContent: '' },
+            submitBtn: { disabled: false, textContent: 'REGISTRARSE' },
+            checkDniBtn: { disabled: false, textContent: 'CONTINUAR' }
+        };
+
+        // Pantallas simuladas
+        const SCREENS = {
+            DNI_CHECK: 'dniScreen',
+            REGISTRATION: 'registrationScreen',
+            ALREADY_REGISTERED: 'alreadyRegisteredScreen'
+        };
+
+        // Funciones de utilidad
+        function log(message, type = 'info') {
+            const results = document.getElementById('testResults');
+            const timestamp = new Date().toLocaleTimeString();
+            results.innerHTML += `
+                <div class="result ${type}">
+                    <strong>[${timestamp}]</strong> ${message}
+                </div>
+            `;
+            console.log(`[${timestamp}] ${message}`);
+        }
+
+        function clearMessage() {
+            log('📝 Mensajes limpiados');
+        }
+
+        function hideLoadingModal() {
+            log('⏳ Modal de carga ocultado');
+        }
+
+        function showScreen(screenName) {
+            log(`🖥️ Mostrando pantalla: ${screenName}`);
+        }
+
+        // Función principal que queremos probar - resetApplicationToStart()
+        function resetApplicationToStart() {
+            log('🔄 Reseteando aplicación al estado inicial', 'info');
+            
+            // Limpiar variables globales
+            testState.currentDni = null;
+            
+            // Resetear formulario de registro
+            if (elements.registrationForm) {
+                elements.registrationForm.reset();
+            }
+            
+            // Limpiar campos específicos
+            if (elements.dniInput) {
+                elements.dniInput.value = '';
+            }
+            
+            if (elements.displayDni) {
+                elements.displayDni.textContent = '';
+            }
+            
+            // Limpiar mensajes
+            clearMessage();
+            
+            // Remover cualquier modal de éxito que pueda quedar
+            const existingModals = document.querySelectorAll('.mock-success-modal');
+            existingModals.forEach(modal => {
+                modal.style.display = 'none';
+                log('❌ Modal de éxito removido');
+            });
+            
+            // Restablecer estado de botones
+            if (elements.submitBtn) {
+                elements.submitBtn.disabled = false;
+                elements.submitBtn.textContent = 'REGISTRARSE';
+            }
+            
+            if (elements.checkDniBtn) {
+                elements.checkDniBtn.disabled = false;
+                elements.checkDniBtn.textContent = 'CONTINUAR';
+            }
+            
+            // Volver a la pantalla inicial
+            showScreen(SCREENS.DNI_CHECK);
+            
+            // Dar foco al campo DNI
+            setTimeout(() => {
+                if (elements.dniInput) {
+                    elements.dniInput.focus();
+                }
+            }, 100);
+            
+            log('✅ Aplicación reseteada correctamente', 'success');
+        }
+
+        // Simular window.close() exitoso
+        function testCloseSuccess() {
+            log('🧪 Iniciando test: Cierre Exitoso', 'info');
+            
+            // Mostrar modal
+            document.getElementById('mockSuccessModal').style.display = 'flex';
+            
+            // Simular clic en botón con cierre exitoso
+            setTimeout(() => {
+                log('👆 Usuario hace clic en FINALIZAR');
+                log('✅ window.close() ejecutado exitosamente', 'success');
+                document.getElementById('mockSuccessModal').style.display = 'none';
+                log('🚪 Ventana cerrada - Test completado', 'success');
+            }, 1000);
+        }
+
+        // Simular window.close() fallido
+        function testCloseFallback() {
+            log('🧪 Iniciando test: Cierre Fallido (Fallback)', 'warning');
+            
+            // Mostrar modal
+            document.getElementById('mockSuccessModal').style.display = 'flex';
+            
+            // Simular clic en botón con cierre fallido
+            setTimeout(() => {
+                log('👆 Usuario hace clic en FINALIZAR');
+                log('❌ window.close() falló (simulado)', 'warning');
+                
+                // Simular el fallback después de 500ms
+                setTimeout(() => {
+                    log('⚠️ Fallback activado: verificando si ventana sigue abierta');
+                    // Simular que la ventana sigue abierta (!document.hidden = true)
+                    log('🔄 Ventana aún abierta, ejecutando resetApplicationToStart()');
+                    resetApplicationToStart();
+                }, 500);
+            }, 1000);
+        }
+
+        // Probar reset directo
+        function testDirectReset() {
+            log('🧪 Iniciando test: Reset Directo', 'info');
+            
+            // Simular que hay datos cargados
+            testState.currentDni = '12345678';
+            elements.dniInput.value = '12345678';
+            elements.displayDni.textContent = '12345678';
+            elements.submitBtn.disabled = true;
+            elements.submitBtn.textContent = 'PROCESANDO...';
+            
+            log('📝 Estado simulado: Formulario con datos y botón deshabilitado');
+            
+            setTimeout(() => {
+                resetApplicationToStart();
+            }, 500);
+        }
+
+        function clearTests() {
+            document.getElementById('testResults').innerHTML = '';
+            document.getElementById('mockSuccessModal').style.display = 'none';
+            testState = { currentDni: null, formData: {}, windowCloseAttempts: 0 };
+            log('🧹 Tests limpiados', 'info');
+        }
+
+        // Configurar el botón del modal
+        document.getElementById('mockCloseBtn').addEventListener('click', () => {
+            log('👆 Click en botón FINALIZAR del modal');
+            
+            // Remover modal
+            document.getElementById('mockSuccessModal').style.display = 'none';
+            
+            // Intentar cerrar ventana (siempre falla en este test)
+            try {
+                if (window.close) {
+                    // En un test, esto siempre fallará
+                    throw new Error('Simulando fallo de window.close()');
+                }
+            } catch (e) {
+                log('❌ No se pudo cerrar la ventana, activando fallback', 'warning');
+            }
+            
+            // Fallback: Si no se pudo cerrar la ventana, resetear la aplicación
+            setTimeout(() => {
+                if (!document.hidden) {
+                    resetApplicationToStart();
+                }
+            }, 500);
+        });
+
+        // Log inicial
+        log('🚀 Test de funcionalidad de cerrar inicializado', 'info');
+        log('💡 Selecciona un escenario para probar el comportamiento', 'info');
+    </script>
+</body>
+</html>

@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#161337">
+    <title>Test Mobile - Funcionalidad Cerrar</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #161337 0%, #1223d4 50%, #930cbc 100%);
+            color: white;
+            min-height: 100vh;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+        
+        .mobile-test-container {
+            max-width: 400px;
+            margin: 0 auto;
+            background: rgba(255,255,255,0.95);
+            border-radius: 15px;
+            padding: 20px;
+            color: #333;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        
+        .test-header {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+        
+        .device-info {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+        
+        .test-section {
+            margin-bottom: 25px;
+        }
+        
+        .test-button {
+            width: 100%;
+            padding: 15px;
+            margin: 10px 0;
+            border: none;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #161337 0%, #1223d4 100%);
+            color: white;
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+        }
+        
+        .btn-warning {
+            background: linear-gradient(135deg, #ffc107 0%, #fd7e14 100%);
+            color: white;
+        }
+        
+        .btn-info {
+            background: linear-gradient(135deg, #17a2b8 0%, #6f42c1 100%);
+            color: white;
+        }
+        
+        .test-button:active {
+            transform: scale(0.98);
+        }
+        
+        .result-container {
+            margin-top: 20px;
+            max-height: 300px;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        .result-item {
+            padding: 10px 15px;
+            margin: 5px 0;
+            border-radius: 8px;
+            font-size: 14px;
+            border-left: 4px solid transparent;
+        }
+        
+        .result-success { 
+            background: #d4edda; 
+            color: #155724; 
+            border-left-color: #28a745;
+        }
+        
+        .result-warning { 
+            background: #fff3cd; 
+            color: #856404; 
+            border-left-color: #ffc107;
+        }
+        
+        .result-error { 
+            background: #f8d7da; 
+            color: #721c24; 
+            border-left-color: #dc3545;
+        }
+        
+        .result-info { 
+            background: #d1ecf1; 
+            color: #0c5460; 
+            border-left-color: #17a2b8;
+        }
+        
+        .timestamp {
+            font-size: 12px;
+            opacity: 0.7;
+            margin-right: 8px;
+        }
+        
+        /* Simulación del modal de éxito */
+        .mock-success-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        
+        .mock-success-content {
+            background: white;
+            padding: 30px 25px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 10px 50px rgba(0,0,0,0.5);
+            max-width: 350px;
+            width: 100%;
+            color: #333;
+        }
+        
+        .success-icon {
+            font-size: 60px;
+            color: #28a745;
+            margin-bottom: 20px;
+            animation: bounceIn 0.6s ease-out;
+        }
+        
+        .success-title {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 15px;
+            color: #333;
+        }
+        
+        .success-details {
+            margin-bottom: 25px;
+            line-height: 1.5;
+        }
+        
+        .success-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .btn-modal {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .btn-modal-primary {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+        }
+        
+        .btn-modal-secondary {
+            background: #6c757d;
+            color: white;
+        }
+        
+        @keyframes bounceIn {
+            0% { transform: scale(0); opacity: 0; }
+            50% { transform: scale(1.1); opacity: 1; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        
+        /* Indicadores de estado del dispositivo */
+        .device-status {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #dee2e6;
+            margin-bottom: 10px;
+        }
+        
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 12px;
+        }
+        
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+        
+        .status-online { background: #28a745; }
+        .status-offline { background: #dc3545; }
+        .status-unknown { background: #ffc107; }
+    </style>
+</head>
+<body>
+    <div class="mobile-test-container">
+        <div class="test-header">
+            <h1>📱 Test Mobile</h1>
+            <p>Funcionalidad de Cerrar</p>
+        </div>
+        
+        <div class="device-info">
+            <div class="device-status">
+                <div class="status-indicator">
+                    <div class="status-dot" id="networkStatus"></div>
+                    <span>Red</span>
+                </div>
+                <div class="status-indicator">
+                    <div class="status-dot" id="touchStatus"></div>
+                    <span>Touch</span>
+                </div>
+                <div class="status-indicator">
+                    <div class="status-dot" id="orientationStatus"></div>
+                    <span id="orientationText">Portrait</span>
+                </div>
+            </div>
+            
+            <div><strong>User Agent:</strong> <span id="userAgent"></span></div>
+            <div><strong>Viewport:</strong> <span id="viewport"></span></div>
+            <div><strong>Device Pixel Ratio:</strong> <span id="pixelRatio"></span></div>
+        </div>
+        
+        <div class="test-section">
+            <h3>🧪 Tests de Comportamiento</h3>
+            
+            <button class="test-button btn-primary" onclick="testMobileRegistration()">
+                📝 Simular Registro Completo
+            </button>
+            
+            <button class="test-button btn-warning" onclick="testWindowClose()">
+                🚪 Probar window.close()
+            </button>
+            
+            <button class="test-button btn-info" onclick="testFallbackBehavior()">
+                🔄 Probar Fallback Mobile
+            </button>
+            
+            <button class="test-button btn-success" onclick="showMockSuccessModal()">
+                ✅ Modal de Éxito
+            </button>
+            
+            <div style="display: flex; gap: 10px;">
+                <button class="test-button btn-info" onclick="clearResults()" style="flex: 1;">
+                    🧹 Limpiar
+                </button>
+                <button class="test-button btn-primary" onclick="exportResults()" style="flex: 1;">
+                    📤 Exportar
+                </button>
+            </div>
+        </div>
+        
+        <div class="result-container" id="results"></div>
+    </div>
+
+    <!-- Modal simulado de éxito -->
+    <div id="mockSuccessModal" class="mock-success-modal">
+        <div class="mock-success-content">
+            <div class="success-icon">✅</div>
+            <h2 class="success-title">Registro Exitoso</h2>
+            <div class="success-details">
+                <p><strong>Juan Test Mobile</strong></p>
+                <p>Tu registro ha sido completado correctamente.<br>Recordá que el ganador debe estar presente en el evento.</p>
+            </div>
+            <div class="success-actions">
+                <button type="button" class="btn-modal btn-modal-primary" id="mockFinalizeBtn">
+                    FINALIZAR
+                </button>
+                <p style="margin: 5px 0 0 0; font-size: 14px; color: #666;">
+                    El registro está completo. Al hacer clic se cerrará la aplicación.
+                </p>
+                <button type="button" class="btn-modal btn-modal-secondary" onclick="hideMockModal()">
+                    CANCELAR TEST
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Estado del test
+        let testResults = [];
+        let testSessionId = Date.now();
+        
+        // Función para logging
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const result = {
+                timestamp,
+                message,
+                type,
+                sessionId: testSessionId
+            };
+            
+            testResults.push(result);
+            
+            const resultsContainer = document.getElementById('results');
+            const resultElement = document.createElement('div');
+            resultElement.className = `result-item result-${type}`;
+            resultElement.innerHTML = `
+                <span class="timestamp">${timestamp}</span>
+                ${message}
+            `;
+            
+            resultsContainer.appendChild(resultElement);
+            resultsContainer.scrollTop = resultsContainer.scrollHeight;
+            
+            console.log(`[${timestamp}] ${type.toUpperCase()}: ${message}`);
+        }
+        
+        // Detectar información del dispositivo
+        function detectDeviceInfo() {
+            const userAgent = navigator.userAgent;
+            const viewport = `${window.innerWidth}x${window.innerHeight}`;
+            const pixelRatio = window.devicePixelRatio || 1;
+            
+            document.getElementById('userAgent').textContent = userAgent.length > 50 ? 
+                userAgent.substring(0, 50) + '...' : userAgent;
+            document.getElementById('viewport').textContent = viewport;
+            document.getElementById('pixelRatio').textContent = pixelRatio;
+            
+            // Estado de red
+            const networkStatus = navigator.onLine ? 'online' : 'offline';
+            document.getElementById('networkStatus').className = 
+                `status-dot status-${networkStatus === 'online' ? 'online' : 'offline'}`;
+            
+            // Capacidad touch
+            const hasTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+            document.getElementById('touchStatus').className = 
+                `status-dot status-${hasTouch ? 'online' : 'offline'}`;
+            
+            // Orientación
+            updateOrientation();
+        }
+        
+        function updateOrientation() {
+            const orientation = window.innerHeight > window.innerWidth ? 'Portrait' : 'Landscape';
+            document.getElementById('orientationText').textContent = orientation;
+            document.getElementById('orientationStatus').className = 'status-dot status-online';
+        }
+        
+        // Simular resetApplicationToStart (función principal que queremos probar)
+        function resetApplicationToStart() {
+            log('🔄 Ejecutando resetApplicationToStart()', 'info');
+            
+            // Simular limpieza de variables
+            log('📝 Variables globales limpiadas (currentDni = null)', 'success');
+            
+            // Simular reset de formulario
+            log('📋 Formulario de registro reseteado', 'success');
+            
+            // Simular limpieza de campos
+            log('🧹 Campos DNI y display limpiados', 'success');
+            
+            // Simular remoción de modales
+            const modals = document.querySelectorAll('.mock-success-modal[style*="flex"]');
+            if (modals.length > 0) {
+                modals.forEach(modal => modal.style.display = 'none');
+                log('❌ Modales de éxito removidos', 'success');
+            }
+            
+            // Simular restauración de botones
+            log('🔘 Estados de botones restaurados', 'success');
+            
+            // Simular vuelta a pantalla inicial
+            log('🖥️ Regreso a pantalla inicial (DNI)', 'success');
+            
+            // Simular foco en campo DNI
+            log('📍 Foco asignado al campo DNI', 'success');
+            
+            log('✅ Reset de aplicación completado exitosamente', 'success');
+        }
+        
+        // Test 1: Registro completo móvil
+        function testMobileRegistration() {
+            log('🧪 Iniciando test: Registro Completo Mobile', 'info');
+            
+            setTimeout(() => {
+                log('📝 Usuario ingresa DNI: 12345678', 'info');
+            }, 500);
+            
+            setTimeout(() => {
+                log('✅ Validación DNI argentina exitosa', 'success');
+            }, 1000);
+            
+            setTimeout(() => {
+                log('📋 Usuario completa formulario de datos', 'info');
+            }, 1500);
+            
+            setTimeout(() => {
+                log('📤 Enviando datos al servidor...', 'info');
+            }, 2000);
+            
+            setTimeout(() => {
+                log('✅ Registro guardado exitosamente en Google Sheets', 'success');
+            }, 3000);
+            
+            setTimeout(() => {
+                log('🎉 Modal de éxito mostrado', 'success');
+                showMockSuccessModal();
+            }, 3500);
+        }
+        
+        // Test 2: Probar window.close() directamente
+        function testWindowClose() {
+            log('🧪 Iniciando test: window.close() directo', 'warning');
+            
+            try {
+                if (window.close) {
+                    log('🚪 Intentando ejecutar window.close()...', 'info');
+                    window.close();
+                    
+                    // Si llegamos aquí, window.close() falló
+                    setTimeout(() => {
+                        log('❌ window.close() falló (esperado en móviles)', 'error');
+                        log('📱 Los navegadores móviles bloquean window.close() por seguridad', 'warning');
+                    }, 500);
+                } else {
+                    log('❌ window.close no está disponible', 'error');
+                }
+            } catch (error) {
+                log(`❌ Error ejecutando window.close(): ${error.message}`, 'error');
+            }
+        }
+        
+        // Test 3: Comportamiento de fallback móvil
+        function testFallbackBehavior() {
+            log('🧪 Iniciando test: Fallback Mobile Behavior', 'info');
+            
+            log('👆 Usuario hace clic en FINALIZAR', 'info');
+            
+            setTimeout(() => {
+                log('🚪 Intentando window.close()...', 'info');
+                
+                // Simular el intento fallido
+                try {
+                    if (window.close) {
+                        window.close();
+                    }
+                    throw new Error('window.close() bloqueado por navegador');
+                } catch (e) {
+                    log('❌ window.close() falló como se esperaba', 'warning');
+                }
+            }, 1000);
+            
+            setTimeout(() => {
+                log('⏱️ Esperando 500ms para verificar estado de ventana...', 'info');
+            }, 1500);
+            
+            setTimeout(() => {
+                log('👁️ Verificando si ventana sigue abierta (!document.hidden)', 'info');
+                
+                if (!document.hidden) {
+                    log('✅ Ventana confirmada como abierta, activando fallback', 'success');
+                    
+                    setTimeout(() => {
+                        log('🔄 Ejecutando resetApplicationToStart() como fallback', 'success');
+                        resetApplicationToStart();
+                    }, 500);
+                } else {
+                    log('ℹ️ Ventana reportada como oculta/cerrada', 'info');
+                }
+            }, 2000);
+        }
+        
+        // Mostrar modal de éxito simulado
+        function showMockSuccessModal() {
+            document.getElementById('mockSuccessModal').style.display = 'flex';
+            log('📱 Modal de éxito mostrado en dispositivo móvil', 'success');
+        }
+        
+        // Ocultar modal
+        function hideMockModal() {
+            document.getElementById('mockSuccessModal').style.display = 'none';
+            log('❌ Modal de test cancelado por usuario', 'info');
+        }
+        
+        // Limpiar resultados
+        function clearResults() {
+            document.getElementById('results').innerHTML = '';
+            testResults = [];
+            testSessionId = Date.now();
+            log('🧹 Resultados de test limpiados', 'info');
+        }
+        
+        // Exportar resultados
+        function exportResults() {
+            const deviceInfo = {
+                userAgent: navigator.userAgent,
+                viewport: `${window.innerWidth}x${window.innerHeight}`,
+                pixelRatio: window.devicePixelRatio || 1,
+                online: navigator.onLine,
+                hasTouch: 'ontouchstart' in window || navigator.maxTouchPoints > 0,
+                orientation: window.innerHeight > window.innerWidth ? 'Portrait' : 'Landscape'
+            };
+            
+            const exportData = {
+                sessionId: testSessionId,
+                timestamp: new Date().toISOString(),
+                deviceInfo,
+                results: testResults
+            };
+            
+            const blob = new Blob([JSON.stringify(exportData, null, 2)], 
+                { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `mobile-test-results-${testSessionId}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            log('📤 Resultados exportados exitosamente', 'success');
+        }
+        
+        // Configurar el botón del modal
+        document.getElementById('mockFinalizeBtn').addEventListener('click', () => {
+            log('👆 Click en botón FINALIZAR del modal móvil', 'info');
+            
+            // Remover modal
+            document.getElementById('mockSuccessModal').style.display = 'none';
+            log('❌ Modal removido', 'info');
+            
+            // Intentar cerrar ventana
+            setTimeout(() => {
+                try {
+                    if (window.close) {
+                        window.close();
+                    }
+                    throw new Error('window.close() no funciona en móviles');
+                } catch (e) {
+                    log('❌ window.close() falló (comportamiento normal en móvil)', 'warning');
+                }
+                
+                // Fallback automático
+                setTimeout(() => {
+                    if (!document.hidden) {
+                        log('🔄 Activando fallback: resetApplicationToStart()', 'success');
+                        resetApplicationToStart();
+                    }
+                }, 500);
+            }, 100);
+        });
+        
+        // Event listeners para cambios de estado
+        window.addEventListener('orientationchange', () => {
+            setTimeout(updateOrientation, 100);
+        });
+        
+        window.addEventListener('resize', updateOrientation);
+        
+        window.addEventListener('online', () => {
+            document.getElementById('networkStatus').className = 'status-dot status-online';
+            log('📶 Conexión a internet restaurada', 'success');
+        });
+        
+        window.addEventListener('offline', () => {
+            document.getElementById('networkStatus').className = 'status-dot status-offline';
+            log('📵 Conexión a internet perdida', 'warning');
+        });
+        
+        // Inicialización
+        document.addEventListener('DOMContentLoaded', () => {
+            detectDeviceInfo();
+            log('📱 Test Mobile inicializado correctamente', 'success');
+            log('💡 Todos los tests están optimizados para dispositivos móviles', 'info');
+            log('🔒 En móviles, window.close() casi nunca funciona por seguridad', 'warning');
+            log('✅ El fallback resetApplicationToStart() será usado automáticamente', 'success');
+        });
+    </script>
+</body>
+</html>

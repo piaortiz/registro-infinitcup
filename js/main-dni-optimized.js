@@ -27,6 +27,15 @@ const SCREENS = {
     ALREADY_REGISTERED: 'alreadyRegisteredScreen'
 };
 
+// Detección de dispositivos móviles
+const DEVICE_INFO = {
+    isMobile: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent),
+    hasTouch: 'ontouchstart' in window || navigator.maxTouchPoints > 0,
+    isIOS: /iPad|iPhone|iPod/.test(navigator.userAgent),
+    isAndroid: /Android/.test(navigator.userAgent),
+    canCloseWindow: false // Se determinará dinámicamente
+};
+
 // ===== INICIALIZACIÓN =====
 document.addEventListener('DOMContentLoaded', function() {
     initializeElements();
@@ -389,7 +398,13 @@ function showSuccessMessage(nombreCompleto) {
                 <p>Tu registro ha sido completado correctamente.<br>Recordá que el ganador debe estar presente en el evento.</p>
             </div>
             <div class="success-actions">
-                <button type="button" class="btn btn-success-primary" id="closeSuccessBtn">CERRAR</button>
+                <button type="button" class="btn btn-success-primary" id="closeSuccessBtn">FINALIZAR</button>
+                <p style="margin-top: 10px; font-size: 0.9em; color: #666;">
+                    ${DEVICE_INFO.isMobile ? 
+                        'El registro está completo. Al hacer clic volverás al inicio para registrar otro participante.' : 
+                        'El registro está completo. Al hacer clic se cerrará la aplicación.'
+                    }
+                </p>
             </div>
         </div>
     `;
@@ -399,10 +414,40 @@ function showSuccessMessage(nombreCompleto) {
     
     // Agregar event listener
     successModal.querySelector('#closeSuccessBtn').addEventListener('click', () => {
+        console.log('🎯 Botón FINALIZAR presionado');
+        console.log('📱 Dispositivo móvil:', DEVICE_INFO.isMobile);
+        
         successModal.remove();
-        if (window.close) {
-            window.close();
+        
+        // En móviles, ir directo al fallback ya que window.close() casi nunca funciona
+        if (DEVICE_INFO.isMobile || DEVICE_INFO.hasTouch) {
+            console.log('📱 Dispositivo móvil detectado - usando fallback directo');
+            setTimeout(() => {
+                resetApplicationToStart();
+            }, 300);
+            return;
         }
+        
+        // En desktop, intentar cerrar la ventana primero
+        let windowClosed = false;
+        try {
+            if (window.close) {
+                window.close();
+                windowClosed = true;
+                console.log('🚪 window.close() ejecutado');
+            }
+        } catch (e) {
+            console.log('❌ window.close() falló:', e.message);
+        }
+        
+        // Fallback: Si no se pudo cerrar la ventana o es móvil, resetear la aplicación
+        setTimeout(() => {
+            // Verificar si la ventana aún está abierta
+            if (!document.hidden) {
+                console.log('🔄 Ventana aún abierta - ejecutando fallback');
+                resetApplicationToStart();
+            }
+        }, DEVICE_INFO.isMobile ? 200 : 500);
     });
     
     // Auto-foco en el botón después de un momento
@@ -475,4 +520,73 @@ function updateLoadingModal(title, message, state = 'processing') {
         
         console.log('🔄 Modal de carga actualizado:', title, `(${state})`);
     }
+}
+
+// ===== FUNCIÓN PARA RESETEAR LA APLICACIÓN =====
+function resetApplicationToStart() {
+    console.log('🔄 Reseteando aplicación al estado inicial');
+    
+    // Limpiar variables globales
+    currentDni = null;
+    
+    // Resetear formulario de registro
+    if (elements.registrationForm) {
+        elements.registrationForm.reset();
+    }
+    
+    // Limpiar campos específicos
+    if (elements.dniInput) {
+        elements.dniInput.value = '';
+    }
+    
+    if (elements.displayDni) {
+        elements.displayDni.textContent = '';
+    }
+    
+    // Limpiar mensajes
+    clearMessage();
+    
+    // Remover cualquier modal de éxito que pueda quedar
+    const existingModals = document.querySelectorAll('.success-final-screen');
+    existingModals.forEach(modal => modal.remove());
+    
+    // Restaurar visibilidad del header
+    document.body.classList.remove('hide-header');
+    
+    // Ocultar modal de carga si estuviera visible
+    hideLoadingModal();
+    
+    // Restablecer estado de botones
+    if (elements.submitBtn) {
+        elements.submitBtn.disabled = false;
+        elements.submitBtn.textContent = 'REGISTRARSE';
+    }
+    
+    if (elements.checkDniBtn) {
+        elements.checkDniBtn.disabled = false;
+        elements.checkDniBtn.textContent = 'CONTINUAR';
+    }
+    
+    // Mostrar mensaje de feedback en móviles
+    if (DEVICE_INFO.isMobile) {
+        showMessage('✅ Listo para un nuevo registro', 'success');
+        setTimeout(() => clearMessage(), 2000);
+    }
+    
+    // Volver a la pantalla inicial
+    showScreen(SCREENS.DNI_CHECK);
+    
+    // Dar foco al campo DNI (con delay mayor en móviles para mejor UX)
+    setTimeout(() => {
+        if (elements.dniInput) {
+            elements.dniInput.focus();
+            // En móviles, scroll suave hacia arriba
+            if (DEVICE_INFO.isMobile) {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        }
+    }, DEVICE_INFO.isMobile ? 300 : 100);
+    
+    console.log('✅ Aplicación reseteada correctamente');
+    console.log(`📱 Dispositivo: ${DEVICE_INFO.isMobile ? 'Móvil' : 'Desktop'}`);
 }
