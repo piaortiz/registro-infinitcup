@@ -414,7 +414,28 @@ function showSuccessMessage(nombreCompleto) {
         console.log('🎯 Botón FINALIZAR presionado');
         console.log('📱 Dispositivo móvil:', DEVICE_INFO.isMobile);
         
-        successModal.remove();
+        // Cambiar el contenido del modal mientras procesamos
+        const modalContent = successModal.querySelector('.success-content');
+        modalContent.innerHTML = `
+            <div class="success-icon">
+                <div class="checkmark-container">
+                    <div class="checkmark">✓</div>
+                </div>
+            </div>
+            <h2>¡Gracias por participar!</h2>
+            <div class="success-details">
+                <p>Redirigiendo...</p>
+                <div class="loading-spinner" style="
+                    width: 30px; 
+                    height: 30px; 
+                    border: 3px solid #f3f3f3; 
+                    border-top: 3px solid #28a745; 
+                    border-radius: 50%; 
+                    animation: spin 1s linear infinite;
+                    margin: 15px auto;
+                "></div>
+            </div>
+        `;
         
         // Intentar cerrar la ventana (tanto en móvil como desktop)
         try {
@@ -433,7 +454,7 @@ function showSuccessMessage(nombreCompleto) {
                 console.log('🌐 No se pudo cerrar la ventana - redirigiendo a Casino Magic');
                 window.location.href = 'https://casinomagic.com.ar/';
             }
-        }, 1000);
+        }, 1500); // Un poco más de tiempo para que se vea el mensaje
     });
     
     // Auto-foco en el botón después de un momento
